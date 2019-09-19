@@ -1,12 +1,12 @@
 stevo@stone:/media/data/docker/osm-tileserver$ ./import_germany.sh
 + date
-Wed 18 Sep 2019 07:03:06 PM CEST
-+ docker run --name openstreetmap-tile-server-germany --rm=false -e THREADS=8 -e NCACHE=4096 -e UPDATES=enabled -e 'OSM2PGSQL_EXTRA_ARGS=--flat-nodes /flat/flat_nodes.bin' -v /media/data/docker/osm-tileserver/volumes/download/germany-latest.osm.pbf:/data.osm.pbf -v openstreetmap-data-germany-latest:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles-germany-latest:/var/lib/mod_tile -v openstreetmap-flat-germany-latest:/flat openstreetmap-tile-server-germany import
+Thu 19 Sep 2019 08:17:45 AM CEST
++ docker run --name openstreetmap-tile-server-germany --rm=false -e THREADS=8 -e NCACHE=4096 -e UPDATES=enabled -e AUTOVACUUM=off -e 'OSM2PGSQL_EXTRA_ARGS=--flat-nodes /flat/flat_nodes.bin' -v /media/data/docker/osm-tileserver/volumes/download/germany-latest.osm.pbf:/data.osm.pbf -v /media/data/docker/osm-tileserver/volumes/download/germany.poly:/data.poly -v openstreetmap-data-germany-latest:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles-germany-latest:/var/lib/mod_tile -v openstreetmap-flat-germany-latest:/flat openstreetmap-tile-server-germany import
 + '[' 1 -ne 1 ']'
 + '[' import = import ']'
 + CreatePostgressqlConfig
 + cp /etc/postgresql/10/main/postgresql.custom.conf.tmpl /etc/postgresql/10/main/postgresql.custom.conf
-+ sudo -u postgres echo 'autovacuum = on'
++ sudo -u postgres echo 'autovacuum = off'
 + cat /etc/postgresql/10/main/postgresql.custom.conf
 # Suggested minimal settings from
 # https://ircama.github.io/osm-carto-tutorials/tile-server-ubuntu/
@@ -31,7 +31,7 @@ random_page_cost = 1.1
 track_activity_query_size = 16384
 autovacuum_vacuum_scale_factor = 0.05
 autovacuum_analyze_scale_factor = 0.02
-autovacuum = on
+autovacuum = off
 + service postgresql start
  * Starting PostgreSQL 10 database server
    ...done.
@@ -47,28 +47,29 @@ ALTER TABLE
 ALTER TABLE
 + '[' '!' -f /data.osm.pbf ']'
 + osmium fileinfo /data.osm.pbf
-+ grep osmosis_replication_timestamp=
 + osmium fileinfo /data.osm.pbf
++ grep osmosis_replication_timestamp=
 + cut -b35-44
 ++ cat /var/lib/mod_tile/replication_timestamp.txt
 + REPLICATION_TIMESTAMP=2019-09-17
 + sudo -u renderer openstreetmap-tiles-update-expire 2019-09-17
---2019-09-18 17:03:12--  http://replicate-sequences.osm.mazdermind.de/?2019-09-17T00:00:00Z
+--2019-09-19 06:17:50--  http://replicate-sequences.osm.mazdermind.de/?2019-09-17T00:00:00Z
 Resolving replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)... 188.68.50.52, 2a03:4000:6:d080::1
 Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:80... connected.
 HTTP request sent, awaiting response... 301 Moved Permanently
 Location: https://replicate-sequences.osm.mazdermind.de/?2019-09-17T00:00:00Z [following]
---2019-09-18 17:03:12--  https://replicate-sequences.osm.mazdermind.de/?2019-09-17T00:00:00Z
+--2019-09-19 06:17:50--  https://replicate-sequences.osm.mazdermind.de/?2019-09-17T00:00:00Z
 Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 332 [text/plain]
 Saving to: '/var/lib/mod_tile/.osmosis/state.txt'
 
-     0K                                                       100% 24.7M=0s
+     0K                                                       100% 23.9M=0s
 
-2019-09-18 17:03:12 (24.7 MB/s) - '/var/lib/mod_tile/.osmosis/state.txt' saved [332/332]
+2019-09-19 06:17:51 (23.9 MB/s) - '/var/lib/mod_tile/.osmosis/state.txt' saved [332/332]
 
 + '[' -f /data.poly ']'
++ sudo -u renderer cp /data.poly /var/lib/mod_tile/data.poly
 + sudo chown renderer:renderer /flat
 + sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 4096 --number-processes 8 --flat-nodes /flat/flat_nodes.bin -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
 osm2pgsql version 1.0.0 (64 bit id space)
@@ -92,26 +93,26 @@ Setting up table: planet_osm_roads
 
 Reading in file: /data.osm.pbf
 Using PBF parser.
-Processing: Node(306600k 804.7k/s) Way(49755k 26.05k/s) Relation(618990 945.02/s)  parse time: 2946s
-Node stats: total(306600111), max(6804063582) in 381s
-Way stats: total(49755562), max(725677983) in 1910s
-Relation stats: total(619130), max(10048635) in 655s
-Sorting data and creating indexes for planet_osm_point
-Sorting data and creating indexes for planet_osm_line
-Sorting data and creating indexes for planet_osm_polygon
+Processing: Node(306600k 682.9k/s) Way(49755k 26.02k/s) Relation(618630 1032.77/s)  parse time: 2960s
+Node stats: total(306600111), max(6804063582) in 449s
+Way stats: total(49755562), max(725677983) in 1912s
+Relation stats: total(619130), max(10048635) in 599s
 Sorting data and creating indexes for planet_osm_roads
+Sorting data and creating indexes for planet_osm_line
 Stopping table: planet_osm_nodes
+Sorting data and creating indexes for planet_osm_polygon
 Stopping table: planet_osm_rels
 Stopping table: planet_osm_ways
-Building index on table: planet_osm_rels
+Sorting data and creating indexes for planet_osm_point
 Building index on table: planet_osm_ways
 Stopped table: planet_osm_nodes in 0s
+Building index on table: planet_osm_rels
 Copying planet_osm_roads to cluster by geometry finished
 Creating geometry index on planet_osm_roads
-Stopped table: planet_osm_rels in 144s
+Stopped table: planet_osm_rels in 155s
 Creating osm_id index on planet_osm_roads
 Creating indexes on planet_osm_roads finished
-All indexes on planet_osm_roads created in 216s
+All indexes on planet_osm_roads created in 243s
 Completed planet_osm_roads
 Copying planet_osm_point to cluster by geometry finished
 Creating geometry index on planet_osm_point
@@ -119,21 +120,21 @@ Copying planet_osm_line to cluster by geometry finished
 Creating geometry index on planet_osm_line
 Creating osm_id index on planet_osm_point
 Creating indexes on planet_osm_point finished
-All indexes on planet_osm_point created in 1425s
+All indexes on planet_osm_point created in 1401s
 Completed planet_osm_point
 Creating osm_id index on planet_osm_line
 Creating indexes on planet_osm_line finished
-All indexes on planet_osm_line created in 2505s
+All indexes on planet_osm_line created in 2200s
 Completed planet_osm_line
 Copying planet_osm_polygon to cluster by geometry finished
 Creating geometry index on planet_osm_polygon
 Creating osm_id index on planet_osm_polygon
 Creating indexes on planet_osm_polygon finished
-All indexes on planet_osm_polygon created in 4925s
+All indexes on planet_osm_polygon created in 4794s
 Completed planet_osm_polygon
-Stopped table: planet_osm_ways in 6345s
+Stopped table: planet_osm_ways in 6138s
 
-Osm2pgsql took 9292s overall
+Osm2pgsql took 9099s overall
 node cache: stored: 269965053(88.05%), storage efficiency: 50.28% (dense blocks: 1502, sparse nodes: 262283265), hit rate: 89.27%
 + sudo -u postgres psql -d gis -f indexes.sql
 CREATE INDEX
@@ -154,11 +155,11 @@ CREATE INDEX
    ...done.
 + exit 0
 + date
-Wed 18 Sep 2019 09:44:13 PM CEST
+Thu 19 Sep 2019 10:55:17 AM CEST
 + echo 'size of docker container'
 size of docker container
 + docker system df -v
 + grep germany-latest
-openstreetmap-data-germany-latest             1                   59.41GB
-openstreetmap-rendered-tiles-germany-latest   1                   1.295kB
+openstreetmap-rendered-tiles-germany-latest   1                   44.31kB
 openstreetmap-flat-germany-latest             1                   54.43GB
+openstreetmap-data-germany-latest             1                   59.41GB
