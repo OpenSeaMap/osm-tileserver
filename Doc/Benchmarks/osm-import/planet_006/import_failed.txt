@@ -1,0 +1,129 @@
+stevo@stone:/media/data/docker/openstreetmap-tile-server$ ./import_planet.sh 
+################################################################################
+Benchmark openstreetmap-tile-server import
+import file: /media/data/docker/openstreetmap-tile-server/volumes/download/planet-latest.osm.pbf
+################################################################################
+  dev-stevo                       307294b update postgresql.custom.conf and osm2psql -C Param for import of slim planet
+  import_002                      e9236ae update Benchmark Results
+* import_003                      fcc6168 Fix updating by moving to latest version of regional extract tool
+  master                          fcc6168 Fix updating by moving to latest version of regional extract tool
+  stevo-autovacuum                a02daac [behind 6] environment variable AUTOVACUUM added
+  update                          a362c7d adaptations for update procedure
+  remotes/Overv/master            fcc6168 Fix updating by moving to latest version of regional extract tool
+  remotes/origin/HEAD             -> origin/master
+  remotes/origin/dev-stevo        307294b update postgresql.custom.conf and osm2psql -C Param for import of slim planet
+  remotes/origin/import_001       307294b update postgresql.custom.conf and osm2psql -C Param for import of slim planet
+  remotes/origin/import_002       e162aa8 update for second import (with log file for benchmark)
+  remotes/origin/import_003       fcc6168 Fix updating by moving to latest version of regional extract tool
+  remotes/origin/issue2           4e5828e error correction wrong usage of environment variable inside script openstreetmap-tiles-update-expire
+  remotes/origin/issue39          6a2143a error correction in shell script openstreetmap-tiles-update-expire
+  remotes/origin/master           fcc6168 Fix updating by moving to latest version of regional extract tool
+  remotes/origin/stevo-autovacuum 095c3ba Merge branch 'master' into stevo-autovacuum
+  remotes/origin/update           a362c7d adaptations for update procedure
+
+date=Sun 18 Aug 2019 06:24:25 PM CEST
+
+cleanup data in psql data directory
+openstreetmap-data-planet-latest
+openstreetmap-data-planet-latest
+
+docker run --rm -e AUTOVACUUM=off -e THREADS=1 -e NCACHE=50000 --name openstreetmap-tile-server --publish 8001:80 -v /media/data/docker/openstreetmap-tile-server/volumes/download/planet-latest.osm.pbf:/data.osm.pbf -v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile openstreetmap-tile-server import
+
++ '[' 1 -ne 1 ']'
++ '[' import = import ']'
++ CreatePostgressqlConfig
++ cp /etc/postgresql/10/main/postgresql.custom.conf.tmpl /etc/postgresql/10/main/postgresql.custom.conf
++ sudo -u postgres echo 'autovacuum = off'
++ cat /etc/postgresql/10/main/postgresql.custom.conf
+shared_buffers = 128MB
+work_mem = 32MB
+maintenance_work_mem = 256MB
+min_wal_size = 1GB
+max_wal_size = 2GB
+temp_buffers = 32MB
+wal_buffers = 1024kB
+
+effective_io_concurrency = 500
+checkpoint_timeout = 1h
+checkpoint_completion_target = 0.9
+random_page_cost = 1.1
+max_connections = 250
+wal_writer_delay = 500ms
+commit_delay = 10000
+track_activity_query_size = 16384
+
+autovacuum = off
+track_counts = off
+fsync = off
+synchronous_commit = off
+autovacuum = off
++ service postgresql start
+ * Starting PostgreSQL 10 database server
+   ...done.
++ sudo -u postgres createuser renderer
++ sudo -u postgres createdb -E UTF8 -O renderer gis
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION postgis;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION hstore;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'ALTER TABLE geometry_columns OWNER TO renderer;'
+ALTER TABLE
++ sudo -u postgres psql -d gis -c 'ALTER TABLE spatial_ref_sys OWNER TO renderer;'
+ALTER TABLE
++ '[' '!' -f /data.osm.pbf ']'
++ osmium fileinfo /data.osm.pbf
++ osmium fileinfo /data.osm.pbf
++ grep osmosis_replication_timestamp=
++ cut -b35-44
+++ cat /var/lib/mod_tile/replication_timestamp.txt
++ REPLICATION_TIMESTAMP=2019-08-11
++ sudo -u renderer openstreetmap-tiles-update-expire 2019-08-11
+mkdir: cannot create directory '/var/lib/mod_tile/.osmosis': File exists
++ '[' -f /data.poly ']'
++ sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --cache-strategy dense --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 50000 --number-processes 1 -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Node-cache: cache=50000MB, maxblocks=800000*65536, allocation method=10
+Mid: pgsql, cache=50000
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(4525100k 963.6k/s) Way(0k 0.00k/s) Relation(0 0.00/s)/run.sh: line 64:   141 Killed                  sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --cache-strategy dense --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C ${NCACHE} --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
++ sudo -u postgres psql -d gis -f indexes.sql
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
++ service postgresql stop
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0
+
+real	81m26.756s
+user	0m0.578s
+sys	0m1.752s
+
+date=Sun 18 Aug 2019 07:45:53 PM CEST
+
+openstreetmap-data-planet-latest    0                   141GB
+lrwxrwxrwx 1 stevo stevo 21 Aug 17 12:44 /media/data/docker/openstreetmap-tile-server/volumes/download/planet-latest.osm.pbf -> planet-190812.osm.pbf

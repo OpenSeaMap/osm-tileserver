@@ -1,0 +1,75 @@
+start 20.04.2019 03:17
+stop  20.04.2019 11:25
+
+
+root@stone:/media/data/docker/openstreetmap-tile-server# ./import_planet.sh 
+################################################################################
+Benchmark openstreetmap-tile-server import
+import file: /media/data/docker/openstreetmap-tile-server/volumes/download/planet-latest.osm.pbf
+################################################################################
+* dev-stevo                       404e35b [ahead 6, behind 3] Update docu
+  dev-stevo-a                     5c6e493 shell script added the script supports following tasks: - build of docker image - download of maps - import of single osm map - start of the container after import - connect to shell (runnung inside container) - stop of the container
+  master                          67a1bf2 Clarify that custom .OSM.PBF file path needs to be absolute
+  stevo-autovacuum                a02daac environment variable AUTOVACUUM added
+  remotes/Overv/master            67a1bf2 Clarify that custom .OSM.PBF file path needs to be absolute
+  remotes/origin/HEAD             -> origin/master
+  remotes/origin/dev-stevo        10ff6cc ...
+  remotes/origin/master           67a1bf2 Clarify that custom .OSM.PBF file path needs to be absolute
+  remotes/origin/stevo-autovacuum a02daac environment variable AUTOVACUUM added
+  remotes/pl/SSL                  c8f8d0f verify SSL
+  remotes/pl/master               c99368d Info about shared memory error
+  remotes/pl/poland               8ef1fd8 Poprawiony adres aplikacji demonstracyjnej
+  remotes/pl/postgres-11          7ee71e2 Merge branch 'SSL' into postgres-11
+
+date
+
+cleanup data in psql data directory
+openstreetmap-data-planet-latest
+openstreetmap-data-planet-latest
+
+docker run --rm -e THREADS=16 --name openstreetmap-tile-server --publish 8001:80 -v /media/data/docker/openstreetmap-tile-server/volumes/download/planet-latest.osm.pbf:/data.osm.pbf -v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile openstreetmap-tile-server import
+
+ * Starting PostgreSQL 10 database server
+   ...done.
+CREATE EXTENSION
+CREATE EXTENSION
+ALTER TABLE
+ALTER TABLE
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=16348MB, maxblocks=261568*65536, allocation method=11
+Mid: pgsql, cache=16348
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(5141630k 886.2k/s) Way(0k 0.00k/s) Relation(0 0.00/s))[[D 
+
+
+
+
+Processing: Node(5141991k 292.1k/s) Way(18766k 1.63k/s) Relation(0 0.00/s)
+date
+
+openstreetmap-data-berlin-latest   0                   3.467GB
+-rw-r--r-- 1 stevo stevo 47903099809 Apr 18 03:21 /media/data/docker/openstreetmap-tile-server/volumes/download/planet-latest.osm.pbf
+root@stone:/media/data/docker/openstreetmap-tile-server#  
+root@stone:/media/data/docker/openstreetmap-tile-server# 
+root@stone:/media/data/docker/openstreetmap-tile-server# 
+root@stone:/media/data/docker/openstreetmap-tile-server# 
+root@stone:/media/data/docker/openstreetmap-tile-server# 
+root@stone:/media/data/docker/openstreetmap-tile-server# date
+Sat Apr 20 11:23:29 CEST 2019
+

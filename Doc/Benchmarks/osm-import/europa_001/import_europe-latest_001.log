@@ -1,0 +1,68 @@
+stevo@stone:/media/data/docker/openstreetmap-tile-server$ ./docker-service.sh import
++ IMAGE_NAME=openstreetmap-tile-server
++ MAP=http://download.geofabrik.de/europe-latest.osm.pbf
++ VOLUME_TILECACH=openstreetmap-rendered-tiles
++ VOLUME_PSQL=openstreetmap-data-europa
+++ pwd
+++ pwd
++ VOLUMES_OPTS='
+	-v /media/data/docker/openstreetmap-tile-server/volumes/download/europe-latest.osm.pbf:/data.osm.pbf 	-v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-europa:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile '
++ PORTS_OPTS=' --publish 8001:80 '
++ USER_OPTS=
++ IMPORT_CMD='docker run --rm -e THREADS=16          --name openstreetmap-tile-server   --publish 8001:80
+	-v /media/data/docker/openstreetmap-tile-server/volumes/download/europe-latest.osm.pbf:/data.osm.pbf 	-v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-europa:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile  openstreetmap-tile-server import'
++ START_CMD='docker  run --rm -e THREADS=16 --detach --name openstreetmap-tile-server   --publish 8001:80
+	-v /media/data/docker/openstreetmap-tile-server/volumes/download/europe-latest.osm.pbf:/data.osm.pbf 	-v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-europa:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile  openstreetmap-tile-server run'
++ STOP_CMD='docker container kill openstreetmap-tile-server'
++ case "$1" in
+++ pwd
++ wget -c -P /media/data/docker/openstreetmap-tile-server/volumes/download/ http://download.geofabrik.de/europe-latest.osm.pbf
+--2019-03-22 21:42:41--  http://download.geofabrik.de/europe-latest.osm.pbf
+Resolving download.geofabrik.de (download.geofabrik.de)... 88.99.24.113, 88.99.105.98
+Connecting to download.geofabrik.de (download.geofabrik.de)|88.99.24.113|:80... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: http://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/europe-latest.osm.pbf [following]
+URL transformed to HTTPS due to an HSTS policy
+--2019-03-22 21:42:41--  https://ftp5.gwdg.de/pub/misc/openstreetmap/download.geofabrik.de/europe-latest.osm.pbf
+Resolving ftp5.gwdg.de (ftp5.gwdg.de)... 2001:638:60f:110::1:2, 134.76.12.6
+Connecting to ftp5.gwdg.de (ftp5.gwdg.de)|2001:638:60f:110::1:2|:443... connected.
+HTTP request sent, awaiting response... 416 Requested Range Not Satisfiable
+
+    The file is already fully retrieved; nothing to do.
+
++ docker volume rm openstreetmap-data-europa
+openstreetmap-data-europa
++ docker volume create openstreetmap-data-europa
+openstreetmap-data-europa
++ docker run --rm -e THREADS=16 --name openstreetmap-tile-server --publish 8001:80 -v /media/data/docker/openstreetmap-tile-server/volumes/download/europe-latest.osm.pbf:/data.osm.pbf -v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download -v openstreetmap-data-europa:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile openstreetmap-tile-server import
+ * Starting PostgreSQL 10 database server
+   ...done.
+CREATE EXTENSION
+CREATE EXTENSION
+ALTER TABLE
+ALTER TABLE
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=4096MB, maxblocks=65536*65536, allocation method=11
+Mid: pgsql, cache=4096
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(2244919k 346.8k/s) Way(272631k 5.99k/s) Relation(4359290 375.44/s)node cache: stored: 378896861(16.88%), storage efficiency: 70.57% (dense blocks: 35176, sparse nodes: 124357663), hit rate: 18.54%
+Osm2pgsql failed due to ERROR: PBF error: invalid BlobHeader size (> max_blob_header_size)
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0

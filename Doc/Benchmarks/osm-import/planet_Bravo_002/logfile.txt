@@ -1,0 +1,289 @@
+import planet on osm-beta
+
+
+root@osm2:/media/data/openstreetmap-tile-server# ./import_planet.sh 
++ IMAGE_NAME=openstreetmap-tile-server
++ VOLUME_TILECACH=openstreetmap-rendered-tiles
++ AREA_NAME=planet-latest
++ VOLUME_PSQL=openstreetmap-data-planet-latest
+++ pwd
+++ pwd
++ VOLUMES_OPTS_Import='
+	-v /media/data/openstreetmap-tile-server/volumes/download/europe-latest.osm.pbf:/data.osm.pbf 	-v /media/data/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile '
++ VOLUMES_OPTS_RUN='
+	-v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile '
++ PORTS_OPTS=' --publish 8001:80 '
++ USER_OPTS=' --shm-size=3G --restart unless-stopped '
++ IMPORT_CMD='docker run -rm -e THREADS=16          --name openstreetmap-tile-server  --shm-size=3G --restart unless-stopped   --publish 8001:80   openstreetmap-tile-server import'
++ START_CMD='docker  run  -e THREADS=16 --detach --name openstreetmap-tile-server  --shm-size=3G --restart unless-stopped   --publish 8001:80  
+	-v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile  openstreetmap-tile-server run'
++ STOP_CMD='docker container kill openstreetmap-tile-server'
++ case "$1" in
++ docker logs -f openstreetmap-tile-server
++ '[' 1 -ne 1 ']'
++ '[' import = import ']'
++ CreatePostgressqlConfig
++ cp /etc/postgresql/10/main/postgresql.custom.conf.tmpl /etc/postgresql/10/main/postgresql.custom.conf
++ sudo -u postgres echo 'autovacuum = on'
++ cat /etc/postgresql/10/main/postgresql.custom.conf
+shared_buffers = 128MB
+work_mem = 32MB
+maintenance_work_mem = 256MB
+min_wal_size = 1GB
+max_wal_size = 2GB
+temp_buffers = 32MB
+wal_buffers = 1024kB
++ service postgresql start
+
+effective_io_concurrency = 500
+checkpoint_timeout = 1h
+checkpoint_completion_target = 0.9
+random_page_cost = 1.1
+max_connections = 250
+wal_writer_delay = 500ms
+commit_delay = 10000
+track_activity_query_size = 16384
+
+autovacuum = off
+track_counts = off
+fsync = off
+synchronous_commit = off
+
+autovacuum = on
+ * Starting PostgreSQL 10 database server
+   ...done.
++ sudo -u postgres createuser renderer
++ sudo -u postgres createdb -E UTF8 -O renderer gis
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION postgis;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION hstore;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'ALTER TABLE geometry_columns OWNER TO renderer;'
+ALTER TABLE
++ sudo -u postgres psql -d gis -c 'ALTER TABLE spatial_ref_sys OWNER TO renderer;'
+ALTER TABLE
++ '[' '!' -f /data.osm.pbf ']'
++ osmium fileinfo /data.osm.pbf
++ osmium fileinfo /data.osm.pbf
++ grep osmosis_replication_timestamp=
++ cut -b35-44
+++ cat /var/lib/mod_tile/replication_timestamp.txt
++ REPLICATION_TIMESTAMP=2019-09-01
++ sudo -u renderer openstreetmap-tiles-update-expire 2019-09-01
+--2019-09-13 17:37:40--  http://replicate-sequences.osm.mazdermind.de/?2019-09-01T00:00:00Z
+Resolving replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)... 188.68.50.52, 2a03:4000:6:d080::1
+Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:80... connected.
+HTTP request sent, awaiting response... 301 Moved Permanently
+Location: https://replicate-sequences.osm.mazdermind.de/?2019-09-01T00:00:00Z [following]
+--2019-09-13 17:37:40--  https://replicate-sequences.osm.mazdermind.de/?2019-09-01T00:00:00Z
+Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 332 [text/plain]
+Saving to: '/var/lib/mod_tile/.osmosis/state.txt'
+
+     0K                                                       100% 19.1M=0s
+
+2019-09-13 17:37:40 (19.1 MB/s) - '/var/lib/mod_tile/.osmosis/state.txt' saved [332/332]
+
++ '[' -f /data.poly ']'
++ sudo chown renderer:renderer /flat
++ sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 32696 --number-processes 8 --flat-nodes /flat/flat_nodes.bin -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=32696MB, maxblocks=523136*65536, allocation method=11
+Mid: loading persistent node cache from /flat/flat_nodes.bin
+Mid: pgsql, cache=32696
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(5434541k 982.9k/s) Way(602859k 15.23k/s) Relation(7051820 239.08/s)  parse time: 74598s
+Node stats: total(5434541683), max(6765279815) in 5529s
+Way stats: total(602859960), max(721039859) in 39573s
+Relation stats: total(7051940), max(9991547) in 29496s
+Sorting data and creating indexes for planet_osm_line
+Sorting data and creating indexes for planet_osm_polygon
+Sorting data and creating indexes for planet_osm_roads
+Sorting data and creating indexes for planet_osm_point
+Stopping table: planet_osm_ways
+Stopping table: planet_osm_nodes
+Stopping table: planet_osm_rels
+Building index on table: planet_osm_ways
+Stopped table: planet_osm_nodes in 1s
+Building index on table: planet_osm_rels
+Stopped table: planet_osm_rels in 2404s
+Copying planet_osm_roads to cluster by geometry finished
+Creating geometry index on planet_osm_roads
+Copying planet_osm_point to cluster by geometry finished
+Creating geometry index on planet_osm_point
+Creating osm_id index on planet_osm_roads
+Creating indexes on planet_osm_roads finished
+All indexes on planet_osm_roads created in 4657s
+Completed planet_osm_roads
+Creating osm_id index on planet_osm_point
+Creating indexes on planet_osm_point finished
+All indexes on planet_osm_point created in 10428s
+Completed planet_osm_point
+Copying planet_osm_line to cluster by geometry finished
+Creating geometry index on planet_osm_line
+Creating osm_id index on planet_osm_line
+Creating indexes on planet_osm_line finished
+All indexes on planet_osm_line created in 25671s
+Completed planet_osm_line
+Copying planet_osm_polygon to cluster by geometry finished
+Creating geometry index on planet_osm_polygon
+Creating osm_id index on planet_osm_polygon
+Creating indexes on planet_osm_polygon finished
+All indexes on planet_osm_polygon created in 63407s
+Completed planet_osm_polygon
+Stopped table: planet_osm_ways in 123827s
+
+Osm2pgsql took 198426s overall
+node cache: stored: 3837585690(70.61%), storage efficiency: 89.55% (dense blocks: 484944, sparse nodes: 156434916), hit rate: 69.23%
++ sudo -u postgres psql -d gis -f indexes.sql
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
++ service postgresql stop
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0
++ exit 0
+
+root@osm2:/media/data/openstreetmap-tile-server# cat /proc/cpuinfo | grep 'model name'
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+model name	: Intel(R) Xeon(R) CPU           E5520  @ 2.27GHz
+
+root@osm2:/media/data/openstreetmap-tile-server# free
+              total        used        free      shared  buff/cache   available
+Mem:       53583908      557552    26866836          52    26159520    52425360
+Swap:      32165884      102052    32063832
+
+root@osm2:/media/data/openstreetmap-tile-server# docker system df -v | grep 'openstreetmap'
+openstreetmap-tile-server   latest              2e6b57d4d5e7        5 days ago          3.904GB             3.864GB             40.48MB             1
+40e9ae356379        openstreetmap-tile-server   "/run.sh import"    3                   39.9kB              2 days ago          Exited (0) 3 hours ago   openstreetmap-tile-server
+openstreetmap-data-planet-latest             1                   780.5GB
+openstreetmap-rendered-tiles-planet-latest   1                   1.243kB
+openstreetmap-flat-planet-latest             1                   54.12GB
+
+
+
+#################################################################################################################
+
+
+ 
+root@osm2:/media/data/openstreetmap-tile-server# sysbench --num-threads=1 --test=cpu --cpu-max-prime=20000 run
+sysbench 0.4.12:  multi-threaded system evaluation benchmark
+
+Running the test with following options:
+Number of threads: 1
+
+Doing CPU performance benchmark
+
+Threads started!
+Done.
+
+Maximum prime number checked in CPU test: 20000
+
+
+Test execution summary:
+    total time:                          27.9288s
+    total number of events:              10000
+    total time taken by event execution: 27.9277
+    per-request statistics:
+         min:                                  2.70ms
+         avg:                                  2.79ms
+         max:                                  4.34ms
+         approx.  95 percentile:               2.85ms
+
+Threads fairness:
+    events (avg/stddev):           10000.0000/0.00
+    execution time (avg/stddev):   27.9277/0.00
+
+root@osm2
+
+root@osm2:/media/ssd1/benchmark# sysbench --test=fileio --file-total-size=10G --file-num=1024 prepare
+sysbench 0.4.12:  multi-threaded system evaluation benchmark
+
+1024 files, 10240Kb each, 10240Mb total
+Creating files for the test...
+root@osm2:/media/ssd1/benchmark# ulimit -n 100000
+root@osm2:/media/ssd1/benchmark# sysbench --num-threads=16 --test=fileio --file-total-size=10G --file-num=1024 --file-test-mode=rndrd --max-time=30 --max-requests=0 --file-extra-flags=direct run
+sysbench 0.4.12:  multi-threaded system evaluation benchmark
+
+Running the test with following options:
+Number of threads: 16
+
+Extra file open flags: 16384
+1024 files, 10Mb each
+10Gb total file size
+Block size 16Kb
+Number of random requests for random IO: 0
+Read/Write ratio for combined random IO test: 1.50
+Periodic FSYNC enabled, calling fsync() each 100 requests.
+Calling fsync() at the end of test, Enabled.
+Using synchronous I/O mode
+Doing random read test
+Threads started!
+Time limit exceeded, exiting...
+(last message repeated 15 times)
+Done.
+
+Operations performed:  303612 Read, 0 Write, 0 Other = 303612 Total
+Read 4.6328Gb  Written 0b  Total transferred 4.6328Gb  (158.12Mb/sec)
+10119.90 Requests/sec executed
+
+Test execution summary:
+    total time:                          30.0015s
+    total number of events:              303612
+    total time taken by event execution: 479.7437
+    per-request statistics:
+         min:                                  0.05ms
+         avg:                                  1.58ms
+         max:                                 45.71ms
+         approx.  95 percentile:               3.30ms
+
+Threads fairness:
+    events (avg/stddev):           18975.7500/31.55
+    execution time (avg/stddev):   29.9840/0.00
+
+
+
+
+

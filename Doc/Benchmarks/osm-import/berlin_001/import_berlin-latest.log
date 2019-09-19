@@ -1,0 +1,103 @@
+stevo@stone:/media/data/docker/openstreetmap-tile-server$ ./docker-service.sh import
++ IMAGE_NAME=openstreetmap-tile-server
++ MAP=http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
++ VOLUME_TILECACH=openstreetmap-rendered-tiles
++ VOLUME_PSQL=openstreetmap-data-berlin
+++ pwd
+++ pwd
++ VOLUMES_OPTS='
+	-v /media/data/docker/openstreetmap-tile-server/volumes/download/berlin-latest.osm.pbf:/data.osm.pbf 	-v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-berlin:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile '
++ PORTS_OPTS=' --publish 8001:80 '
++ USER_OPTS=
++ IMPORT_CMD='docker run --rm -e THREADS=16          --name openstreetmap-tile-server   --publish 8001:80  
+	-v /media/data/docker/openstreetmap-tile-server/volumes/download/berlin-latest.osm.pbf:/data.osm.pbf 	-v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-berlin:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile  openstreetmap-tile-server import'
++ START_CMD='docker  run --rm -e THREADS=16 --detach --name openstreetmap-tile-server   --publish 8001:80  
+	-v /media/data/docker/openstreetmap-tile-server/volumes/download/berlin-latest.osm.pbf:/data.osm.pbf 	-v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download 	-v openstreetmap-data-berlin:/var/lib/postgresql/10/main 	-v openstreetmap-rendered-tiles:/var/lib/mod_tile  openstreetmap-tile-server run'
++ STOP_CMD='docker container kill openstreetmap-tile-server'
++ case "$1" in
+++ pwd
++ wget -c -P /media/data/docker/openstreetmap-tile-server/volumes/download/ http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+--2019-03-22 21:33:45--  http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+Resolving download.geofabrik.de (download.geofabrik.de)... 88.99.24.113, 88.99.105.98
+Connecting to download.geofabrik.de (download.geofabrik.de)|88.99.24.113|:80... connected.
+HTTP request sent, awaiting response... 416 Requested Range Not Satisfiable
+
+    The file is already fully retrieved; nothing to do.
+
++ docker volume rm openstreetmap-data-berlin
+openstreetmap-data-berlin
++ docker volume create openstreetmap-data-berlin
+openstreetmap-data-berlin
++ docker run --rm -e THREADS=16 --name openstreetmap-tile-server --publish 8001:80 -v /media/data/docker/openstreetmap-tile-server/volumes/download/berlin-latest.osm.pbf:/data.osm.pbf -v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download -v openstreetmap-data-berlin:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile openstreetmap-tile-server import
+ * Starting PostgreSQL 10 database server
+   ...done.
+CREATE EXTENSION
+CREATE EXTENSION
+ALTER TABLE
+ALTER TABLE
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=4096MB, maxblocks=65536*65536, allocation method=11
+Mid: pgsql, cache=4096
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(5219k 217.5k/s) Way(769k 30.77k/s) Relation(10990 2747.50/s)  parse time: 53s
+Node stats: total(5219484), max(6352881927) in 24s
+Way stats: total(769207), max(678474604) in 25s
+Relation stats: total(13468), max(9419985) in 4s
+Sorting data and creating indexes for planet_osm_point
+Sorting data and creating indexes for planet_osm_line
+Stopping table: planet_osm_nodes
+Sorting data and creating indexes for planet_osm_roads
+Sorting data and creating indexes for planet_osm_polygon
+Stopping table: planet_osm_ways
+Stopping table: planet_osm_rels
+Building index on table: planet_osm_ways
+Building index on table: planet_osm_rels
+Stopped table: planet_osm_nodes in 0s
+Copying planet_osm_roads to cluster by geometry finished
+Creating geometry index on planet_osm_roads
+Creating osm_id index on planet_osm_roads
+Creating indexes on planet_osm_roads finished
+All indexes on planet_osm_roads created in 0s
+Completed planet_osm_roads
+Stopped table: planet_osm_rels in 1s
+Copying planet_osm_line to cluster by geometry finished
+Creating geometry index on planet_osm_line
+Copying planet_osm_point to cluster by geometry finished
+Creating geometry index on planet_osm_point
+Creating osm_id index on planet_osm_line
+Creating indexes on planet_osm_line finished
+All indexes on planet_osm_line created in 6s
+Completed planet_osm_line
+Creating osm_id index on planet_osm_point
+Creating indexes on planet_osm_point finished
+All indexes on planet_osm_point created in 12s
+Completed planet_osm_point
+Stopped table: planet_osm_ways in 17s
+Copying planet_osm_polygon to cluster by geometry finished
+Creating geometry index on planet_osm_polygon
+Creating osm_id index on planet_osm_polygon
+Creating indexes on planet_osm_polygon finished
+All indexes on planet_osm_polygon created in 24s
+Completed planet_osm_polygon
+
+Osm2pgsql took 78s overall
+node cache: stored: 5219484(100.00%), storage efficiency: 51.01% (dense blocks: 98, sparse nodes: 4714439), hit rate: 100.00%
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0

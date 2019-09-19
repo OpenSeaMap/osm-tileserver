@@ -1,0 +1,198 @@
+stone
+
+stevo@stone:/media/data/docker/openstreetmap-tile-server$ ./import_germany.sh 
+--2019-08-17 09:55:47--  https://download.geofabrik.de/europe/germany-latest.osm.pbf
+Resolving download.geofabrik.de (download.geofabrik.de)... 88.99.142.44, 88.99.105.98
+Connecting to download.geofabrik.de (download.geofabrik.de)|88.99.142.44|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3192883773 (3.0G) [application/octet-stream]
+Saving to: ‘./volumes/download/germany-latest.osm.pbf’
+
+germany-latest.osm.pbf        100%[==============================================>]   2.97G  4.27MB/s    in 10m 22s 
+
+2019-08-17 10:06:09 (4.90 MB/s) - ‘./volumes/download/germany-latest.osm.pbf’ saved [3192883773/3192883773]
+
+--2019-08-17 10:06:09--  https://download.geofabrik.de/europe/germany.poly
+Resolving download.geofabrik.de (download.geofabrik.de)... 88.99.142.44, 88.99.105.98
+Connecting to download.geofabrik.de (download.geofabrik.de)|88.99.142.44|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 43012 (42K)
+Saving to: ‘./volumes/download/germany.poly’
+
+germany.poly                  100%[==============================================>]  42.00K  --.-KB/s    in 0.04s   
+
+2019-08-17 10:06:09 (985 KB/s) - ‘./volumes/download/germany.poly’ saved [43012/43012]
+
+################################################################################
+Benchmark openstreetmap-tile-server import
+import file: /media/data/docker/openstreetmap-tile-server/volumes/download/germany-latest.osm.pbf
+################################################################################
+  dev-stevo                       307294b update postgresql.custom.conf and osm2psql -C Param for import of slim planet
+  import_002                      e9236ae update Benchmark Results
+* import_003                      fcc6168 Fix updating by moving to latest version of regional extract tool
+  master                          fcc6168 Fix updating by moving to latest version of regional extract tool
+  stevo-autovacuum                a02daac [behind 6] environment variable AUTOVACUUM added
+  update                          a362c7d adaptations for update procedure
+  remotes/Overv/master            fcc6168 Fix updating by moving to latest version of regional extract tool
+  remotes/origin/HEAD             -> origin/master
+  remotes/origin/dev-stevo        307294b update postgresql.custom.conf and osm2psql -C Param for import of slim planet
+  remotes/origin/import_001       307294b update postgresql.custom.conf and osm2psql -C Param for import of slim planet
+  remotes/origin/import_002       e162aa8 update for second import (with log file for benchmark)
+  remotes/origin/import_003       fcc6168 Fix updating by moving to latest version of regional extract tool
+  remotes/origin/issue2           4e5828e error correction wrong usage of environment variable inside script openstreetmap-tiles-update-expire
+  remotes/origin/issue39          6a2143a error correction in shell script openstreetmap-tiles-update-expire
+  remotes/origin/master           fcc6168 Fix updating by moving to latest version of regional extract tool
+  remotes/origin/stevo-autovacuum 095c3ba Merge branch 'master' into stevo-autovacuum
+  remotes/origin/update           a362c7d adaptations for update procedure
+
+date=Sat 17 Aug 2019 10:06:09 AM CEST
+
+cleanup data in psql data directory
+openstreetmap-data-germany-latest
+openstreetmap-data-germany-latest
+
+docker run --rm -e THREADS=16 -e NCACHE=32768 --name openstreetmap-tile-server --publish 8001:80 -v /media/data/docker/openstreetmap-tile-server/volumes/download/germany-latest.osm.pbf:/data.osm.pbf -v openstreetmap-data-germany-latest:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile openstreetmap-tile-server import
+
++ '[' 1 -ne 1 ']'
++ '[' import = import ']'
++ CreatePostgressqlConfig
++ cp /etc/postgresql/10/main/postgresql.custom.conf.tmpl /etc/postgresql/10/main/postgresql.custom.conf
++ sudo -u postgres echo 'autovacuum = on'
++ cat /etc/postgresql/10/main/postgresql.custom.conf
+shared_buffers = 128MB
+work_mem = 32MB
+maintenance_work_mem = 256MB
+min_wal_size = 1GB
+max_wal_size = 2GB
+temp_buffers = 32MB
+wal_buffers = 1024kB
+
+effective_io_concurrency = 500
+checkpoint_timeout = 1h
+checkpoint_completion_target = 0.9
+random_page_cost = 1.1
+max_connections = 250
+wal_writer_delay = 500ms
+commit_delay = 10000
+track_activity_query_size = 16384
+
+autovacuum = off
+track_counts = off
+fsync = off
+synchronous_commit = off
+autovacuum = on
++ service postgresql start
+ * Starting PostgreSQL 10 database server
+   ...done.
++ sudo -u postgres createuser renderer
++ sudo -u postgres createdb -E UTF8 -O renderer gis
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION postgis;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION hstore;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'ALTER TABLE geometry_columns OWNER TO renderer;'
+ALTER TABLE
++ sudo -u postgres psql -d gis -c 'ALTER TABLE spatial_ref_sys OWNER TO renderer;'
+ALTER TABLE
++ '[' '!' -f /data.osm.pbf ']'
++ osmium fileinfo /data.osm.pbf
++ grep osmosis_replication_timestamp=
++ cut -b35-44
++ osmium fileinfo /data.osm.pbf
+++ cat /var/lib/mod_tile/replication_timestamp.txt
++ REPLICATION_TIMESTAMP=2019-08-16
++ sudo -u renderer openstreetmap-tiles-update-expire 2019-08-16
+mkdir: cannot create directory '/var/lib/mod_tile/.osmosis': File exists
++ '[' -f /data.poly ']'
++ sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 32768 --number-processes 16 -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=32768MB, maxblocks=524288*65536, allocation method=11
+Mid: pgsql, cache=32768
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(305319k 428.2k/s) Way(49515k 28.05k/s) Relation(614440 1765.63/s)  parse time: 2826s
+Node stats: total(305319103), max(6716592859) in 713s
+Way stats: total(49515149), max(714528146) in 1765s
+Relation stats: total(614696), max(9929300) in 348s
+Sorting data and creating indexes for planet_osm_point
+Sorting data and creating indexes for planet_osm_polygon
+Sorting data and creating indexes for planet_osm_line
+Sorting data and creating indexes for planet_osm_roads
+Stopping table: planet_osm_ways
+Stopping table: planet_osm_rels
+Stopping table: planet_osm_nodes
+Building index on table: planet_osm_ways
+Stopped table: planet_osm_nodes in 0s
+Building index on table: planet_osm_rels
+Copying planet_osm_roads to cluster by geometry finished
+Creating geometry index on planet_osm_roads
+Stopped table: planet_osm_rels in 32s
+Creating osm_id index on planet_osm_roads
+Creating indexes on planet_osm_roads finished
+All indexes on planet_osm_roads created in 37s
+Completed planet_osm_roads
+Copying planet_osm_point to cluster by geometry finished
+Creating geometry index on planet_osm_point
+Copying planet_osm_line to cluster by geometry finished
+Creating geometry index on planet_osm_line
+Creating osm_id index on planet_osm_point
+Creating indexes on planet_osm_point finished
+All indexes on planet_osm_point created in 548s
+Completed planet_osm_point
+Creating osm_id index on planet_osm_line
+Creating indexes on planet_osm_line finished
+All indexes on planet_osm_line created in 712s
+Completed planet_osm_line
+Copying planet_osm_polygon to cluster by geometry finished
+Creating geometry index on planet_osm_polygon
+Creating osm_id index on planet_osm_polygon
+Creating indexes on planet_osm_polygon finished
+All indexes on planet_osm_polygon created in 2412s
+Completed planet_osm_polygon
+Stopped table: planet_osm_ways in 2975s
+
+Osm2pgsql took 5802s overall
+node cache: stored: 305319103(100.00%), storage efficiency: 50.25% (dense blocks: 1532, sparse nodes: 297507999), hit rate: 100.00%
++ sudo -u postgres psql -d gis -f indexes.sql
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
++ service postgresql stop
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0
+
+real	101m33.091s
+user	0m0.835s
+sys	0m0.120s
+
+date=Sat 17 Aug 2019 11:47:46 AM CEST
+
+openstreetmap-data-germany-latest   0                   78.65GB
+-rw-r--r-- 1 stevo stevo 3192883773 Aug 17 01:43 /media/data/docker/openstreetmap-tile-server/volumes/download/germany-latest.osm.pbf
+stevo@stone:/media/data/docker/openstreetmap-tile-server$ 

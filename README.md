@@ -1,2 +1,2 @@
 # osm-tileserver
-scripts and documentation for open streetmap tile server
+scripts and documentation for setup, run and mainenance of open streetmap tile server
