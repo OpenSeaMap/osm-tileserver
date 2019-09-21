@@ -17,9 +17,9 @@ docker build -t openstreetmap-tile-server-germany ./src
 
 ## prepare required docker volumes
 ```
-  docker volume create openstreetmap-data-germany-latest
-  docker volume create openstreetmap-rendered-tiles-germany-latest
-  docker volume create openstreetmap-flat-germany-latest
+docker volume create openstreetmap-data-germany-latest
+docker volume create openstreetmap-rendered-tiles-germany-latest
+docker volume create openstreetmap-flat-germany-latest
 ```
 
 ## import osm extract to postgresql database
@@ -227,9 +227,9 @@ second: filter diff (filter relevant differences for your selected region / poly
 third: import differences to postgresql (osm2psql)
 forth: expiring tiles (from tile cache)
 
-# optimisations
+# optimizations
 
-## prerender tileserver
+## pre render tile server
 
 The render applications needs long runtimes for rendering tiles in low zoom levels.
 If a webbrowser request such tiles then the tileserver is not fast enough to render
