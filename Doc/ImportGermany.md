@@ -31,7 +31,7 @@ docker run \
 	-e NCACHE=4096 \
 	-e UPDATES=enabled \
 	-e AUTOVACUUM=off \
-	-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /flat/flat_nodes.bin" \
+	-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /nodes/flat_nodes.bin" \
 	-v $PWD/volumes/download/germany-latest.osm.pbf:/data.osm.pbf \
 	-v $PWD/volumes/download/germany.poly:/data.poly \
 	-v openstreetmap-data-germany-latest:/var/lib/postgresql/10/main \
@@ -47,7 +47,7 @@ docker run \
 		--name openstreetmap-tile-server-germany \
 		--rm=false \
 		-e THREADS=8 \
-		-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /flat/flat_nodes.bin" \
+		-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /nodes/flat_nodes.bin" \
 		-e UPDATES=enabled \
 		-e NCACHE=4096 \
 		--publish 8000:80 \
