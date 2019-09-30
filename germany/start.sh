@@ -6,7 +6,7 @@ docker run \
 		-e THREADS=8 \
 		-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /nodes/flat_nodes.bin" \
 		-e UPDATES=enabled \
-		--publish 8000:80 \
+		--publish 8002:80 \
 		--shm-size=3G \
 		--restart unless-stopped \
 		--detach \
