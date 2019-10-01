@@ -5,7 +5,7 @@ docker run \
 		--rm=false \
 		-e THREADS=8 \
 		-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /nodes/flat_nodes.bin" \
-		-e UPDATES=enabled \
+		-e UPDATES=disabled \
 		--publish 8002:80 \
 		--shm-size=3G \
 		--restart unless-stopped \
@@ -17,3 +17,6 @@ docker run \
 		-v openstreetmap-flat-germany-latest:/nodes \
 		openstreetmap-tile-server-germany  \
 		run
+
+exit 0
+

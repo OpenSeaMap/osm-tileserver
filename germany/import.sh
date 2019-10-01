@@ -2,7 +2,7 @@
 
 docker run \
 	--name openstreetmap-tile-server-germany \
-  --rm=false \
+	--rm=false \
 	-e THREADS=8 \
 	-e UPDATES=enabled \
 	-e AUTOVACUUM=off \
