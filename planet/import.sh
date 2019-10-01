@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -x
+
+date
+
 docker run \
 	--name openstreetmap-tile-server-planet \
 	--rm=false \
@@ -13,3 +17,7 @@ docker run \
 	-v openstreetmap-flat-planet-latest:/nodes \
 	openstreetmap-tile-server-planet \
 	import
+
+date
+
+docker system df -v
