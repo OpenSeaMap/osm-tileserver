@@ -1,0 +1,200 @@
+Import planet
+date: 01.10.2019
+Server: stone
+
+stevo@stone:/media/data/docker/osm-tileserver$ planet/import.sh
++ date
+Tue 01 Oct 2019 09:02:49 AM CEST
++ docker run --name openstreetmap-tile-server-planet --rm=false -e THREADS=8 -e UPDATES=enabled -e AUTOVACUUM=off -e 'OSM2PGSQL_EXTRA_ARGS=--flat-nodes /nodes/flat_nodes.bin -C 32000' -v /media/data/docker/osm-tileserver/volumes/download/planet-190923.osm.pbf:/data.osm.pbf -v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles-planet-latest:/var/lib/mod_tile -v openstreetmap-flat-planet-latest:/nodes openstreetmap-tile-server-planet import
++ '[' 1 -ne 1 ']'
++ '[' import = import ']'
++ createPostgresConfig
++ cp /etc/postgresql/10/main/postgresql.custom.conf.tmpl /etc/postgresql/10/main/postgresql.custom.conf
++ sudo -u postgres echo 'autovacuum = off'
++ cat /etc/postgresql/10/main/postgresql.custom.conf
+shared_buffers = 4GB
+work_mem = 1GB
+maintenance_work_mem = 4GB
+fsync = off
+synchronous_commit = off
+max_wal_size = 1GB
+min_wal_size = 80MB
+
+listen_addresses = '*'
+autovacuum = off
++ service postgresql start
+ * Starting PostgreSQL 10 database server
+   ...done.
++ sudo -u postgres createuser renderer
++ sudo -u postgres createdb -E UTF8 -O renderer gis
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION postgis;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION hstore;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'ALTER TABLE geometry_columns OWNER TO renderer;'
+ALTER TABLE
++ sudo -u postgres psql -d gis -c 'ALTER TABLE spatial_ref_sys OWNER TO renderer;'
+ALTER TABLE
++ setPostgresPassword
++ sudo -u postgres psql -c 'ALTER USER renderer PASSWORD '\''renderer'\'''
+ALTER ROLE
++ '[' '!' -f /data.osm.pbf ']'
++ osmium fileinfo /data.osm.pbf
++ osmium fileinfo /data.osm.pbf
++ grep osmosis_replication_timestamp=
++ cut -b35-44
+++ cat /var/lib/mod_tile/replication_timestamp.txt
++ REPLICATION_TIMESTAMP=2019-09-23
++ sudo -u renderer openstreetmap-tiles-update-expire 2019-09-23
+--2019-10-01 07:02:55--  http://replicate-sequences.osm.mazdermind.de/?2019-09-23T00:00:00Z
+Resolving replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)... 188.68.50.52, 2a03:4000:6:d080::1
+Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:80... connected.
+HTTP request sent, awaiting response... 301 Moved Permanently
+Location: https://replicate-sequences.osm.mazdermind.de/?2019-09-23T00:00:00Z [following]
+--2019-10-01 07:02:55--  https://replicate-sequences.osm.mazdermind.de/?2019-09-23T00:00:00Z
+Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 332 [text/plain]
+Saving to: '/var/lib/mod_tile/.osmosis/state.txt'
+
+     0K                                                       100% 24.6M=0s
+
+2019-10-01 07:02:56 (24.6 MB/s) - '/var/lib/mod_tile/.osmosis/state.txt' saved [332/332]
+
++ '[' -f /data.poly ']'
++ sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes 8 --flat-nodes /nodes/flat_nodes.bin -C 32000 -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
+osm2pgsql version 1.0.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=32000MB, maxblocks=512000*65536, allocation method=11
+Mid: loading persistent node cache from /nodes/flat_nodes.bin
+Mid: pgsql, cache=32000
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(5473677k 1670.3k/s) Way(607396k 21.68k/s) Relation(7095130 574.36/s)  parse time: 43642s
+Node stats: total(5473677552), max(6816298012) in 3277s
+Way stats: total(607396920), max(727343207) in 28012s
+Relation stats: total(7095544), max(10064359) in 12353s
+Sorting data and creating indexes for planet_osm_roads
+Sorting data and creating indexes for planet_osm_polygon
+Sorting data and creating indexes for planet_osm_point
+Sorting data and creating indexes for planet_osm_line
+Stopping table: planet_osm_nodes
+Stopping table: planet_osm_rels
+Stopping table: planet_osm_ways
+Building index on table: planet_osm_ways
+Building index on table: planet_osm_rels
+Stopped table: planet_osm_nodes in 1s
+Stopped table: planet_osm_rels in 810s
+Copying planet_osm_point to cluster by geometry finished
+Creating geometry index on planet_osm_point
+Copying planet_osm_roads to cluster by geometry finished
+Creating geometry index on planet_osm_roads
+Creating osm_id index on planet_osm_roads
+Creating indexes on planet_osm_roads finished
+All indexes on planet_osm_roads created in 5879s
+Completed planet_osm_roads
+Creating osm_id index on planet_osm_point
+Creating indexes on planet_osm_point finished
+All indexes on planet_osm_point created in 6651s
+Completed planet_osm_point
+Copying planet_osm_line to cluster by geometry finished
+Creating geometry index on planet_osm_line
+Creating osm_id index on planet_osm_line
+Creating indexes on planet_osm_line finished
+All indexes on planet_osm_line created in 17710s
+Completed planet_osm_line
+Copying planet_osm_polygon to cluster by geometry finished
+Creating geometry index on planet_osm_polygon
+Creating osm_id index on planet_osm_polygon
+Creating indexes on planet_osm_polygon finished
+All indexes on planet_osm_polygon created in 35775s
+Completed planet_osm_polygon
+Stopped table: planet_osm_ways in 67722s
+
+Osm2pgsql took 111365s overall
+node cache: stored: 3763748136(68.76%), storage efficiency: 89.73% (dense blocks: 474287, sparse nodes: 154475762), hit rate: 67.39%
++ sudo -u postgres psql -d gis -f indexes.sql
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
++ service postgresql stop
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0
++ date
+Wed 02 Oct 2019 05:17:49 PM CEST
++ docker system df -v
+Images space usage:
+
+REPOSITORY                          TAG                 IMAGE ID            CREATED             SIZE                SHARED SIZE         UNIQUE SIZE         CONTAINERS
+openstreetmap-tile-server-planet    latest              aa774f94ee53        21 hours ago        3.983GB             2.118GB             1.865GB             0
+<none>                              <none>              8598d6d85b09        32 hours ago        3.983GB             3.942GB             40.46MB             1
+wuir-on-lighttpd-php7_stevo         latest              f29253006c68        5 days ago          328.4MB             11.79MB             316.6MB             1
+openstreetmap-tile-server-germany   latest              2adfb1b5bd4d        5 days ago          3.983GB             3.942GB             40.46MB             0
+osm-tile-server-tirex               latest              3cb1fd2fa9be        8 days ago          3.986GB             64.19MB             3.922GB             0
+online_chart_ol3_gulp               latest              fb3c8930f097        5 weeks ago         1.497GB             652.7MB             844.1MB             0
+openstreetmap-tile-server           latest              b6ec956e61c2        5 weeks ago         3.92GB              64.19MB             3.856GB             0
+oe-buildenv                         latest              78541dde1b36        6 weeks ago         783.1MB             120.3MB             662.8MB             7
+nginx-rp                            latest              b4f7d3503a4d        6 weeks ago         322.3MB             120.3MB             202MB               1
+mariadb                             10.1                b0bd32d3a28d        6 weeks ago         352MB               64.19MB             287.8MB             1
+ubuntu                              18.04               a2a15febcdf3        6 weeks ago         64.19MB             64.19MB             0B                  0
+portainer/portainer                 latest              2b4ddf654e1c        2 months ago        77.68MB             0B                  77.68MB             1
+ubuntu                              16.04               5e13f8dd4c1a        2 months ago        120.3MB             120.3MB             0B                  0
+node                                4                   ef4b194d8fcf        17 months ago       652.7MB             652.7MB             0B                  0
+alastairhm/alpine-lighttpd          3.7                 cc78795e21ef        18 months ago       11.79MB             11.79MB             0B                  0
+gitea/gitea                         1.3.2               b5deffa5ae1f        21 months ago       83.78MB             0B                  83.78MB             1
+
+Containers space usage:
+
+CONTAINER ID        IMAGE                         COMMAND                  LOCAL VOLUMES       SIZE                CREATED             STATUS                     NAMES
+91d90700ee82        oe-buildenv                   "/usr/bin/docker-ent…"   0                   252B                5 hours ago         Up 5 hours                 bold_wiles
+00607730c692        8598d6d85b09                  "/run.sh import"         3                   714kB               32 hours ago        Exited (0) 5 seconds ago   openstreetmap-tile-server-planet
+5225d60e6f42        oe-buildenv                   "/usr/bin/docker-ent…"   0                   524kB               2 days ago          Up 2 days                  cool_satoshi
+f931aa63a4c5        oe-buildenv                   "/usr/bin/docker-ent…"   0                   252B                2 days ago          Up 2 days                  agitated_cartwright
+5aabb1e35204        wuir-on-lighttpd-php7_stevo   "/etc/init.d/startup…"   0                   226kB               5 days ago          Up 5 days                  wuir_stevo
+d78a39417f9a        oe-buildenv                   "/usr/bin/docker-ent…"   0                   524kB               6 days ago          Up 6 days                  silly_davinci
+40a95ae92030        oe-buildenv                   "/usr/bin/docker-ent…"   0                   0B                  6 days ago          Up 6 days                  mystifying_boyd
+238a1f9a4594        oe-buildenv                   "/usr/bin/docker-ent…"   0                   722kB               9 days ago          Up 9 days                  gifted_spence
+3264093ca7c1        oe-buildenv                   "/usr/bin/docker-ent…"   0                   479B                13 days ago         Up 13 days                 optimistic_goodall
+f81f7488ae20        nginx-rp                      "nginx"                  0                   39.2MB              3 weeks ago         Up 2 weeks                 nginx-rp
+be4d04b25c1a        gitea/gitea:1.3.2             "/usr/bin/entrypoint…"   0                   41.9MB              3 weeks ago         Up 2 weeks                 gittea_www
+7f9336277929        mariadb:10.1                  "docker-entrypoint.s…"   0                   2B                  3 weeks ago         Up 2 weeks                 gitea_db
+1125d26aedac        portainer/portainer           "/portainer"             0                   0B                  6 weeks ago         Up 2 weeks                 portainer
+
+Local Volumes space usage:
+
+VOLUME NAME                                   LINKS               SIZE
+openstreetmap-flat-planet-latest              1                   54.54GB
+openstreetmap-data-germany-latest             0                   0B
+portainer_data                                0                   0B
+openstreetmap-flat-germany-latest             0                   0B
+openstreetmap-data-planet-latest              1                   790.6GB
+openstreetmap-rendered-tiles-planet-latest    1                   1.243kB
+openstreetmap-rendered-tiles-germany-latest   0                   0B
+
+stevo@stone:/media/data/docker/osm-tileserver$ ls volumes/download/planet-190923.osm.pbf -l
+-rw-r--r-- 1 stevo stevo 50504745188 Sep 26 13:16 volumes/download/planet-190923.osm.pbf
