@@ -1,0 +1,162 @@
+root@OSM2:/home/stevo/osm-tileserver# planet/docker-service.sh log
++ IMAGE_NAME=openstreetmap-tile-server-planet
++ case "$1" in
++ docker logs -f openstreetmap-tile-server-planet
++ '[' 1 -ne 1 ']'
++ '[' import = import ']'
++ createPostgresConfig
++ cp /etc/postgresql/10/main/postgresql.custom.conf.tmpl /etc/postgresql/10/main/postgresql.custom.conf
++ sudo -u postgres echo 'autovacuum = off'
++ cat /etc/postgresql/10/main/postgresql.custom.conf
+shared_buffers = 4GB
+work_mem = 1GB
+maintenance_work_mem = 4GB
+fsync = off
+synchronous_commit = off
+max_wal_size = 1GB
+min_wal_size = 80MB
+
+listen_addresses = '*'
+autovacuum = off
++ service postgresql start
+ * Starting PostgreSQL 10 database server
+   ...done.
++ sudo -u postgres createuser renderer
++ sudo -u postgres createdb -E UTF8 -O renderer gis
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION postgis;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'CREATE EXTENSION hstore;'
+CREATE EXTENSION
++ sudo -u postgres psql -d gis -c 'ALTER TABLE geometry_columns OWNER TO renderer;'
+ALTER TABLE
++ sudo -u postgres psql -d gis -c 'ALTER TABLE spatial_ref_sys OWNER TO renderer;'
+ALTER TABLE
++ setPostgresPassword
++ sudo -u postgres psql -c 'ALTER USER renderer PASSWORD '\''renderer'\'''
+ALTER ROLE
++ '[' '!' -f /data.osm.pbf ']'
++ osmium fileinfo /data.osm.pbf
++ osmium fileinfo /data.osm.pbf
++ grep osmosis_replication_timestamp=
++ cut -b35-44
+++ cat /var/lib/mod_tile/replication_timestamp.txt
++ REPLICATION_TIMESTAMP=2019-09-29
++ sudo -u renderer openstreetmap-tiles-update-expire 2019-09-29
+--2019-10-05 06:49:07--  http://replicate-sequences.osm.mazdermind.de/?2019-09-29T00:00:00Z
+Resolving replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)... 188.68.50.52, 2a03:4000:6:d080::1
+Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:80... connected.
+HTTP request sent, awaiting response... 301 Moved Permanently
+Location: https://replicate-sequences.osm.mazdermind.de/?2019-09-29T00:00:00Z [following]
+--2019-10-05 06:49:08--  https://replicate-sequences.osm.mazdermind.de/?2019-09-29T00:00:00Z
+Connecting to replicate-sequences.osm.mazdermind.de (replicate-sequences.osm.mazdermind.de)|188.68.50.52|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 332 [text/plain]
+Saving to: '/var/lib/mod_tile/.osmosis/state.txt'
+
+     0K                                                       100% 26.6M=0s
+
+2019-10-05 06:49:08 (26.6 MB/s) - '/var/lib/mod_tile/.osmosis/state.txt' saved [332/332]
+
++ '[' -f /data.poly ']'
++ sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes 8 --flat-nodes /nodes/flat_nodes.bin -C 30000 -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
+osm2pgsql version 1.0.0 (64 bit id space)
+
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=30000MB, maxblocks=480000*65536, allocation method=11
+Mid: loading persistent node cache from /nodes/flat_nodes.bin
+Mid: pgsql, cache=30000
+Setting up table: planet_osm_nodes
+Setting up table: planet_osm_ways
+Setting up table: planet_osm_rels
+Using lua based tag processing pipeline with script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_point
+Setting up table: planet_osm_line
+Setting up table: planet_osm_polygon
+Setting up table: planet_osm_roads
+
+Reading in file: /data.osm.pbf
+Using PBF parser.
+Processing: Node(5488348k 1061.8k/s) Way(609002k 9.49k/s) Relation(7121310 209.96/s)  parse time: 103273s
+Node stats: total(5488348099), max(6836005909) in 5169s
+Way stats: total(609002770), max(729758297) in 64185s
+Relation stats: total(7121610), max(10094695) in 33918s
+Sorting data and creating indexes for planet_osm_polygon
+Sorting data and creating indexes for planet_osm_line
+Sorting data and creating indexes for planet_osm_point
+Sorting data and creating indexes for planet_osm_roads
+Stopping table: planet_osm_nodes
+Stopping table: planet_osm_ways
+Stopping table: planet_osm_rels
+Building index on table: planet_osm_rels
+Stopped table: planet_osm_nodes in 0s
+Building index on table: planet_osm_ways
+Stopped table: planet_osm_rels in 896s
+Copying planet_osm_point to cluster by geometry finished
+Creating geometry index on planet_osm_point
+Copying planet_osm_roads to cluster by geometry finished
+Creating geometry index on planet_osm_roads
+Creating osm_id index on planet_osm_roads
+Creating indexes on planet_osm_roads finished
+All indexes on planet_osm_roads created in 5934s
+Completed planet_osm_roads
+Creating osm_id index on planet_osm_point
+Creating indexes on planet_osm_point finished
+All indexes on planet_osm_point created in 7049s
+Completed planet_osm_point
+Copying planet_osm_line to cluster by geometry finished
+Creating geometry index on planet_osm_line
+Creating osm_id index on planet_osm_line
+Creating indexes on planet_osm_line finished
+All indexes on planet_osm_line created in 19296s
+Completed planet_osm_line
+Copying planet_osm_polygon to cluster by geometry finished
+Creating geometry index on planet_osm_polygon
+Creating osm_id index on planet_osm_polygon
+Creating indexes on planet_osm_polygon finished
+All indexes on planet_osm_polygon created in 48992s
+Completed planet_osm_polygon
+Stopped table: planet_osm_ways in 95591s
+
+Osm2pgsql took 198867s overall
+node cache: stored: 3544626427(64.58%), storage efficiency: 90.14% (dense blocks: 444027, sparse nodes: 147348712), hit rate: 63.24%
++ sudo -u postgres psql -d gis -f indexes.sql
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
++ service postgresql stop
+ * Stopping PostgreSQL 10 database server
+   ...done.
++ exit 0
++ exit 0
+root@OSM2:/home/stevo/osm-tileserver#
+
+Local Volumes space usage:
+
+VOLUME NAME                                  LINKS               SIZE
+openstreetmap-data-planet-latest             1                   792.7GB
+openstreetmap-rendered-tiles-planet-latest   1                   1.243kB
+openstreetmap-flat-planet-latest             1                   54.7GB
+
+Build cache usage: 0B
+
+CACHE ID            CACHE TYPE          SIZE                CREATED             LAST USED           USAGE               SHARED
+root@OSM2:/home/stevo/osm-tileserver# 
+root@OSM2:/home/stevo/osm-tileserver# ls volumes/download/ -l
+insgesamt 49441212
+drwxr-xr-x 2 stevo stevo        4096 Okt  4 18:40 planet-190923.osm.pbf
+-rw-r--r-- 1 root  root  50627783885 Okt  3 12:08 planet-190930.osm.pbf
+-rw-r--r-- 1 root  root           56 Okt  3 12:35 planet-190930.osm.pbf.md5

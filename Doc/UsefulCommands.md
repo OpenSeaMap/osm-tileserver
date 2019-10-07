@@ -57,6 +57,10 @@ The following command starts the docker container in background.
 docker run --rm -e THREADS=16 --detach --name openstreetmap-tile-server --publish 8001:80 -v /media/data/docker/openstreetmap-tile-server/volumes/download/berlin-latest.osm.pbf:/data.osm.pbf -v /media/data/docker/openstreetmap-tile-server/volumes/download/:/download -v openstreetmap-data:/var/lib/postgresql/10/main -v openstreetmap-rendered-tiles:/var/lib/mod_tile openstreetmap-tile-server run
 ```
 
+### set date of last import
+
+touch /var/lib/mod_tile/planet-import-complete
+
 ### debugging
 
 #### show MAP
@@ -106,7 +110,7 @@ docker system df -v
 open bash shell on docker and enter following command to prerender zoomlevel 1-8
 ```
 docker exec -i -t openstreetmap-tile-server /bin/bash
-render_list -a -m ajt -z 6 -Z 6 -l 800 -n 12
+render_list -a -m ajt -z 0 -Z 1 -l 800 -n 12
 
 -a, --all            render all tiles in given zoom level range instead of reading from STDIN
 -m, --map=MAP        render tiles in this map (defaults to 'default')
@@ -114,6 +118,25 @@ render_list -a -m ajt -z 6 -Z 6 -l 800 -n 12
 -n, --num-threads=N the number of parallel request threads (default 1)
 -z, --min-zoom=ZOOM  filter input to only render tiles greater or equal to this zoom level (default is 0)
 -Z, --max-zoom=ZOOM  filter input to only render tiles less than or equal to this zoom level (default is 20)
+```
+
+### render single file
+
+```
+cd /home/renderer/src/openstreetmap-carto/
+wget https://raw.githubusercontent.com/giggls/openstreetmap-carto-de/master/scripts/render_single_tile.py
+chmod +x render_single_tile.py
+sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 3 4 5 -o test.3.4.5.png
+sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 9 131 190 -o test.9.131.190.png
+sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 13 4397 2687 -o test.13.4397.2687.png
+sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 15 8409 12176 -o test.15.8409.12176.png
+```
+
+### transfer docker volumes
+
+```
+rsync -avX --progress /var/lib/docker/_volumes/ /var/lib/docker/volumes/
+
 ```
 
 
