@@ -6,6 +6,7 @@ docker run \
 		-e THREADS=16 \
 		-e OSM2PGSQL_EXTRA_ARGS="--flat-nodes /nodes/flat_nodes.bin -C 4096" \
 		-e UPDATES=disabled \
+		-e RENDERERAPP=tirex \
 		--publish 8002:80 \
 		--shm-size=6G \
 		--restart unless-stopped \
@@ -15,9 +16,9 @@ docker run \
 		-v openstreetmap-data-planet-latest:/var/lib/postgresql/10/main \
 		-v openstreetmap-rendered-tiles-planet-latest:/var/lib/mod_tile \
 		-v openstreetmap-flat-planet-latest:/nodes \
-		-v openstreetmap-flat-planet-latest:/nodes \
-    -v $PWD/volumes/transfer:/transfer \
+		-v $PWD/volumes/transfer:/transfer \
 		openstreetmap-tile-server-planet \
 		run
 
 exit 0
+
