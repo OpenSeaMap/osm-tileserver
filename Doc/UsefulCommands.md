@@ -122,14 +122,24 @@ render_list -a -m ajt -z 0 -Z 1 -l 800 -n 12
 
 ### render single file
 
+#### get script from github
 ```
 cd /home/renderer/src/openstreetmap-carto/
 wget https://raw.githubusercontent.com/giggls/openstreetmap-carto-de/master/scripts/render_single_tile.py
 chmod +x render_single_tile.py
-sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 3 4 5 -o test.3.4.5.png
-sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 9 131 190 -o test.9.131.190.png
-sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 13 4397 2687 -o test.13.4397.2687.png
-sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 15 8409 12176 -o test.15.8409.12176.png
+```
+
+#### render tiles
+```
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -m 3 4 5 -o /transfer/test.3.4.5.png
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -m 9 131 190 -o /transfer/test.9.131.190.png
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -m 13 4397 2687 -o /transfer/test.13.4397.2687.png
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -m 15 8409 12176 -o /transfer/test.15.8409.12176.png
+
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-z05.png -u /5/15/10.png
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-15-8409-12177.png -u /15/8409/12177.png
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-17-33640-48710.png -u /17/33640/48710.png
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-14-8795-5375.png -u /14/8795/5375.png
 ```
 
 ### transfer docker volumes
@@ -137,6 +147,33 @@ sudo -u renderer ./render_single_tile.py -s mapnik.xml -t -m 15 8409 12176 -o te
 ```
 rsync -avX --progress /var/lib/docker/_volumes/ /var/lib/docker/volumes/
 
+```
+
+## PostgreSQL
+
+### enable logging
+
+add following lines to file /etc/postgresql/10/main/postgresql.custom.conf and restart database
+```
+log_directory = 'pg_log'                    
+log_filename = 'postgresql-dateformat.log'
+log_statement = 'all'
+logging_collector = on
+```
+
+```
+/etc/init.d/postgresql restart
+```
+
+### startt psql
+```
+sudo -u postgres psql -d gis
+```
+
+
+## show log
+```
+tail -f /var/lib/postgresql/10/main/pg_log/postgresql-dateformat.log
 ```
 
 

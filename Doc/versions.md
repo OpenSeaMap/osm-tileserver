@@ -28,11 +28,16 @@ osm2pgsql
 -  https://github.com/openstreetmap/osm2pgsql.git
 -  commit id: 08de8ced4ff819dab5b3728b3e87d3932dc6d06d
 -  master
+-  osm2pgsql version 1.0.0
 
 regional
 -  https://github.com/zverik/regional
 -  commit id: 612fe3e040d8bb70d2ab3b133f3b2cfc6c940520
 -  HEAD
+
+osmosis
+- osmosis/bionic,now 0.46-2 all [installed]
+
 
 
 # version info commands
