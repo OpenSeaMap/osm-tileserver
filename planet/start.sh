@@ -17,8 +17,8 @@ docker run \
 		-v openstreetmap-rendered-tiles-planet-latest:/var/lib/mod_tile \
 		-v openstreetmap-flat-planet-latest:/nodes \
 		-v $PWD/volumes/transfer:/transfer \
+		-v $PWD/volumes/replication:/replication \
 		openstreetmap-tile-server-planet \
 		run
 
 exit 0
-
