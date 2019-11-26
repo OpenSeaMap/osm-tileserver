@@ -8,6 +8,7 @@ docker run \
 		-e UPDATES=disabled \
 		-e RENDERERAPP=tirex \
 		--publish 8002:80 \
+		--publish 5432:5432 \
 		--shm-size=6G \
 		--restart unless-stopped \
 		--detach \
