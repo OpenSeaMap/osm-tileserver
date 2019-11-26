@@ -165,17 +165,15 @@ logging_collector = on
 /etc/init.d/postgresql restart
 ```
 
-### startt psql
+### start psql
 ```
 sudo -u postgres psql -d gis
 ```
-
 
 ## show log
 ```
 tail -f /var/lib/postgresql/10/main/pg_log/postgresql-dateformat.log
 ```
-
 
 # Benchmarks
 
