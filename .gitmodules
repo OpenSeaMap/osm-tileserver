@@ -1,0 +1,6 @@
+[submodule "src_tileserver"]
+	path = src_tileserver
+	url = git@github.com:stevo01/openstreetmap-tile-server.git
+[submodule "src_tileserver_scripts"]
+	path = src_tileserver_scripts
+	url = git@github.com:stevo01/tileserver-scripts.git
