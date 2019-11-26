@@ -1,3 +1,0 @@
-[submodule "src"]
-	path = src
-	url = git@github.com:stevo01/openstreetmap-tile-server.git
