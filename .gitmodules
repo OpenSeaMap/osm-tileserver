@@ -4,3 +4,6 @@
 [submodule "src_tileserver_scripts"]
 	path = src_tileserver_scripts
 	url = git@github.com:stevo01/tileserver-scripts.git
+[submodule "src_tileserver_db"]
+	path = src_tileserver_db
+	url = git@github.com:stevo01/osm-tileserver-db.git
