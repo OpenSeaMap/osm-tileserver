@@ -125,8 +125,8 @@ render_list -a -m ajt -z 0 -Z 1 -l 800 -n 12
 #### get script from github
 ```
 cd /home/renderer/src/openstreetmap-carto/
-wget https://raw.githubusercontent.com/giggls/openstreetmap-carto-de/master/scripts/render_single_tile.py
-chmod +x render_single_tile.py
+wget https://raw.githubusercontent.com/giggls/openstreetmap-carto-de/master/scripts/render_single_tile.py -O scripts/render_single_tile.py
+chmod +x scripts/render_single_tile.py
 ```
 
 #### render tiles
