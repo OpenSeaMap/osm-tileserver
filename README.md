@@ -71,14 +71,3 @@ cd src_tileserver
 scripts/docker-service.sh build
 scripts/docker-service.sh start
 ```
-
-https://help.openstreetmap.org/questions/51521/mapnik-and-postgresql-in-differents-servers
--> pico project.mml
-host: "osmpsql"
-user: "renderer"
-password: "renderer"
-
-cd /home/renderer/src/openstreetmap-carto
-wget https://raw.githubusercontent.com/giggls/openstreetmap-carto-de/master/scripts/render_single_tile.py -O scripts/render_single_tile.py
-chmod +x scripts/render_single_tile.py
-sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -m 3 4 5 -o /transfer/test.3.4.5.png

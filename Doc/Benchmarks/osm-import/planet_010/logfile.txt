@@ -1,0 +1,103 @@
++ docker run --name osm-db-utils --rm=false -e 'OSM2PGSQL_EXTRA_ARGS=--flat-nodes /nodes/flat_nodes.bin -C 4096' --restart unless-stopped --detach --memory=32G --hostname osmdbutils --link osm-tileserver-db:osm-tileserver-db -v openstreetmap-flat:/nodes -v /media/data/docker/osm-tileserver/src_tileserver_scripts/volumes/transfer:/transfer -v /media/data/docker/osm-tileserver/src_tileserver_scripts/volumes/work:/replication/work -v /media/data/docker/osm-tileserver/src_tileserver_scripts/volumes/download:/replication/download osm-db-utils run
+806cc6b9dcf342961c67dd16cc503fbb767372b2ad238ea960988c3300a448a4
++ exit 0
+stevo@stone:/media/data/docker/osm-tileserver/src_tileserver_scripts$ scripts/docker-service.sh connect
++ IMAGE_NAME=osm-db-utils
++ case "$1" in
++ docker exec -i -t osm-db-utils /bin/bash
+root@osmdbutils:/replication# ./scripts/initial-import.sh download/planet-latest.osm.pbf
++ BASE=/storage_ssd/osm_replicate
++ FLATNODEFILE=/nodes/flat_nodes.bin
++ STYLE=/replication/src/openstreetmap-carto/openstreetmap-carto.style
++ LUA=/replication/src/openstreetmap-carto/openstreetmap-carto.lua
++ export PGPASSWORD=renderer
++ PGPASSWORD=renderer
++ PG_USER=renderer
++ PG_DBNAME=gis
++ PG_HOST=osmpsql
++ echo
+
++ osm2pgsql -U renderer -H osmpsql -d gis -G -s -C16000 -S /replication/src/openstreetmap-carto/openstreetmap-carto.style --flat-nodes /nodes/flat_nodes.bin --hstore --tag-transform-script /replication/src/openstreetmap-carto/openstreetmap-carto.lua -p planet_osm_hstore download/planet-latest.osm.pbf
+osm2pgsql version 0.96.0 (64 bit id space)
+
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Using projection SRS 3857 (Spherical Mercator)
+Setting up table: planet_osm_hstore_point
+Setting up table: planet_osm_hstore_line
+Setting up table: planet_osm_hstore_polygon
+Setting up table: planet_osm_hstore_roads
+Allocating memory for dense node cache
+Allocating dense node cache in one big chunk
+Allocating memory for sparse node cache
+Sharing dense sparse
+Node-cache: cache=16000MB, maxblocks=256000*65536, allocation method=11
+Mid: loading persistent node cache from /nodes/flat_nodes.bin
+Mid: pgsql, cache=16000
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+
+Reading in file: download/planet-latest.osm.pbf
+Using PBF parser.
+Processing: Node(5653714k 1246.7k/s) Way(627566k 16.09k/s) Relation(7299490 435.04/s)  parse time: 60309s
+Node stats: total(5653714969), max(7058904857) in 4535s
+Way stats: total(627566465), max(755765825) in 38995s
+Relation stats: total(7299912), max(10414477) in 16779s
+Committing transaction for planet_osm_hstore_point
+Committing transaction for planet_osm_hstore_line
+Committing transaction for planet_osm_hstore_polygon
+Committing transaction for planet_osm_hstore_roads
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+Setting up table: planet_osm_hstore_nodes
+Setting up table: planet_osm_hstore_ways
+Setting up table: planet_osm_hstore_rels
+Using lua based tag processing pipeline with script /replication/src/openstreetmap-carto/openstreetmap-carto.lua
+node cache: stored: 1932347578(34.18%), storage efficiency: 92.14% (dense blocks: 232533, sparse nodes: 96122135), hit rate: 30.75%
+Osm2pgsql failed due to ERROR: Connection to database failed: FATAL:  remaining connection slots are reserved for non-replication superuser connections
