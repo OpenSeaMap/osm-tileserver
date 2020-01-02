@@ -140,13 +140,14 @@ sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/t
 sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-15-8409-12177.png -u /15/8409/12177.png
 sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-17-33640-48710.png -u /17/33640/48710.png
 sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -o /transfer/test-14-8795-5375.png -u /14/8795/5375.png
+
+sudo -u renderer ./scripts/render_single_tile.py -t -s mapnik.xml -m 5 16 8 -o /transfer/test.5.16.8.png
 ```
 
 ### transfer docker volumes
 
 ```
 rsync -avX --progress /var/lib/docker/_volumes/ /var/lib/docker/volumes/
-
 ```
 
 ## PostgreSQL

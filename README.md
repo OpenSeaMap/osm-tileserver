@@ -1,30 +1,30 @@
 # osm-tileserver
-scripts and documentation for setup, run and maintenance of open streetmap tile server
-the tileserver is based on several docker container
+Scripts and documentation for setup, run and maintenance of open streetmap tile server.
+The tileserver is based on several docker container
 
 ## tileserver_db
-the image includes the psql database with GIS extensions
+the docker image includes the psql database with GIS extensions
 
 ## tileserver_scripts
-the container includes following scripts
+the docker image includes scripts for:
 + initial import of osm database
 + periodical updates of osm database
 
 ## tileserver
-the image includes following services
+the docker image includes following services:
 + mapnik renderer and stypesheets
 + tirex, controls the renderer
 + apache - webserver
-+ modtile - apache plugin for tileserver
++ modtile - apache plugin for tile server
 
 ## docker volumes
-osm tileserver needs several docker volumes for persistant storage of files
+osm tileserver needs several docker volumes for persistent storage of files
 
 ### openstreetmap-db
 used from image tileserver_db and stores the psql database
 
 ### openstreetmap-flat
-used from image tileserver_scripts. Stores part of the database in seperate file to increase database performance during initial import and updates.
+used from image tileserver_scripts. It stores part of the database in separate file to increase performance during initial import and updates.
 The files are required for updates of database.
 
 ### openstreetmap-tilecache
@@ -35,7 +35,7 @@ checkout sources
 ```
 git clone git@github.com:OpenSeaMap/osm-tileserver.git
 osm-tileserver/
-git checkout ubdatedb
+git checkout bravo
 git submodule update --init
 ```
 

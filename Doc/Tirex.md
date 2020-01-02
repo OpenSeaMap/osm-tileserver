@@ -28,9 +28,7 @@ sudo -u tirex tirex-master
 ## prerender Tiles
 ```
 tirex-batch map=ajt lon=-90,90 lat=-180,180 z=0-1 -f not-exists
-
-tirex-batch map=ajt
-
+tirex-batch map=ajt x=16 y=8 z=5
 ```
 
 errors:
