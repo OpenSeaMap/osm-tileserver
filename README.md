@@ -34,10 +34,20 @@ this volumes is a storage for rendered tiles
 checkout sources
 ```
 git clone git@github.com:OpenSeaMap/osm-tileserver.git
-osm-tileserver/
+cd osm-tileserver/
 git checkout bravo
 git submodule update --init
 ```
+
+update local repository
+```
+cd osm-tileserver/
+git fetch --all
+git pull
+git submodule update --recursive
+```
+
+
 
 ## build tileserver_db image and start sql database
 ```
