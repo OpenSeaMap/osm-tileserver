@@ -17,6 +17,10 @@ the docker image includes following services:
 + apache - webserver
 + modtile - apache plugin for tile server
 
+## networks
+
+docker network create tile-postgis-network
+
 ## docker volumes
 osm tileserver needs several docker volumes for persistent storage of files
 
