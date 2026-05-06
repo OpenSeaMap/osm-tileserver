@@ -1,0 +1,40 @@
+root@osmdbutils:/replication/src/openstreetmap-carto# scripts/get-external-data.py -H osmpsql -U renderer -w renderer -d gis -v -R renderer
+INFO:root:Starting load of external data into database
+INFO:root:Checking table simplified_water_polygons
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): osmdata.openstreetmap.de:443
+DEBUG:urllib3.connectionpool:https://osmdata.openstreetmap.de:443 "GET /download/simplified-water-polygons-split-3857.zip HTTP/1.1" 200 23714152
+INFO:root:  Download complete (23714152 bytes)
+INFO:root:  Decompressing file
+INFO:root:  Importing into database
+DEBUG:root:running ogr2ogr -f PostgreSQL -lco GEOMETRY_NAME=way -lco SPATIAL_INDEX=FALSE -lco EXTRACT_SCHEMA_FROM_LAYER_NAME=YES -nln loading.simplified_water_polygons "PG:dbname=gis user=renderer host=osmpsql password=renderer" data/simplified_water_polygons/simplified-water-polygons-split-3857/simplified_water_polygons.shp
+INFO:root:  Import complete
+INFO:root:Checking table water_polygons
+DEBUG:urllib3.connectionpool:https://osmdata.openstreetmap.de:443 "GET /download/water-polygons-split-3857.zip HTTP/1.1" 200 922906407
+INFO:root:  Download complete (922906407 bytes)
+INFO:root:  Decompressing file
+INFO:root:  Importing into database
+DEBUG:root:running ogr2ogr -f PostgreSQL -lco GEOMETRY_NAME=way -lco SPATIAL_INDEX=FALSE -lco EXTRACT_SCHEMA_FROM_LAYER_NAME=YES -nln loading.water_polygons "PG:dbname=gis user=renderer host=osmpsql password=renderer" data/water_polygons/water-polygons-split-3857/water_polygons.shp
+INFO:root:  Import complete
+INFO:root:Checking table icesheet_polygons
+DEBUG:urllib3.connectionpool:Resetting dropped connection: osmdata.openstreetmap.de
+DEBUG:urllib3.connectionpool:https://osmdata.openstreetmap.de:443 "GET /download/antarctica-icesheet-polygons-3857.zip HTTP/1.1" 200 52708053
+INFO:root:  Download complete (52708053 bytes)
+INFO:root:  Decompressing file
+INFO:root:  Importing into database
+DEBUG:root:running ogr2ogr -f PostgreSQL -lco GEOMETRY_NAME=way -lco SPATIAL_INDEX=FALSE -lco EXTRACT_SCHEMA_FROM_LAYER_NAME=YES -nln loading.icesheet_polygons "PG:dbname=gis user=renderer host=osmpsql password=renderer" data/icesheet_polygons/antarctica-icesheet-polygons-3857/icesheet_polygons.shp
+INFO:root:  Import complete
+INFO:root:Checking table icesheet_outlines
+DEBUG:urllib3.connectionpool:https://osmdata.openstreetmap.de:443 "GET /download/antarctica-icesheet-outlines-3857.zip HTTP/1.1" 200 53588615
+INFO:root:  Download complete (53588615 bytes)
+INFO:root:  Decompressing file
+INFO:root:  Importing into database
+DEBUG:root:running ogr2ogr -f PostgreSQL -lco GEOMETRY_NAME=way -lco SPATIAL_INDEX=FALSE -lco EXTRACT_SCHEMA_FROM_LAYER_NAME=YES -nln loading.icesheet_outlines -explodecollections "PG:dbname=gis user=renderer host=osmpsql password=renderer" data/icesheet_outlines/antarctica-icesheet-outlines-3857/icesheet_outlines.shp
+INFO:root:  Import complete
+INFO:root:Checking table ne_110m_admin_0_boundary_lines_land
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): naturalearth.s3.amazonaws.com:443
+DEBUG:urllib3.connectionpool:https://naturalearth.s3.amazonaws.com:443 "GET /110m_cultural/ne_110m_admin_0_boundary_lines_land.zip HTTP/1.1" 200 57325
+INFO:root:  Download complete (57325 bytes)
+INFO:root:  Decompressing file
+INFO:root:  Importing into database
+DEBUG:root:running ogr2ogr -f PostgreSQL -lco GEOMETRY_NAME=way -lco SPATIAL_INDEX=FALSE -lco EXTRACT_SCHEMA_FROM_LAYER_NAME=YES -nln loading.ne_110m_admin_0_boundary_lines_land --config SHAPE_ENCODING WINDOWS-1252 -explodecollections -t_srs EPSG:3857 "PG:dbname=gis user=renderer host=osmpsql password=renderer" data/ne_110m_admin_0_boundary_lines_land/ne_110m_admin_0_boundary_lines_land.shp
+INFO:root:  Import complete

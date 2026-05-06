@@ -1,0 +1,333 @@
+root@osmdbutils:/replication# cat ./scripts/replicate-loop.sh 
+#!/bin/bash
+set -x
+LANG=C
+
+BASE=/replication/work
+LOCKFILE=$BASE/data/replicate.lock
+FLATNODEFILE=/nodes/flat_nodes.bin
+SEQFILE=$BASE/data/sequence_file
+STYLE=/replication/src/openstreetmap-carto/openstreetmap-carto.style
+LUA=/replication/src/openstreetmap-carto/openstreetmap-carto.lua
+MINZOOM=14
+MAXZOOM=16
+LOGFILE=/replication/work/replication.log
+
+export PATH=$PATH:/usr/lib/python3-pyosmium
+
+export PGPASSWORD=renderer
+PG_USER=renderer
+PG_DBNAME=gis
+PG_HOST=osmpsql
+
+function log_info {
+    today=`date +%Y-%m-%d.%H:%M:%S`
+    echo "[INFO ] $today $1" 2>&1 | tee -a $LOGFILE
+}
+
+function log_error {
+    today=`date +%Y-%m-%d.%H:%M:%S`
+    echo "[ERROR] $today $1" 2>&1 | tee -a $LOGFILE
+    exit 1
+}
+
+
+# check if sequence file exists
+if ! [ -f $SEQFILE ]
+then
+  log_error "error: sequence file $SEQFILE does not exist"
+fi
+
+# check if lockfile excists
+if [ -f $LOCKFILE ]
+then
+   # read pid
+   OTHERPID=`cat $LOCKFILE`
+
+   # check if process is still active
+   if kill -0 $OTHERPID 2>/dev/null
+   then
+      # exit script if another instance if script is running
+      echo "other process ($OTHERPID) active"
+      exit 1
+   fi
+fi
+
+log_info "bgn replication $(date)"
+
+# create lockfile
+echo $$ > $LOCKFILE
+
+# calculate and show lag (in minutes)
+START=`date +%s`
+eval $(curl -s https://planet.osm.org/replication/minute/state.txt |grep sequenceNumber)
+local_sequence=$(cat $SEQFILE)
+LAG=$(expr $sequenceNumber - $local_sequence)
+
+log_info "start update: osmosis replication is ${LAG} minutes behind upstream"
+
+THISFILE=$BASE/data/replicate-$START.osc
+MERGEDFILE=$BASE/data/merged.osc
+
+EXPIRELOG=$BASE/expire_$local_sequence.log
+OSMPGSQL_LOGFILE=$BASE/data/osm2pgsql_$local_sequence.stdout
+
+# make backup of the sequence file
+if cp $BASE/data/sequence_file $BASE/data/sequence_file.old
+then
+  log_info "make backup copy of sequence_file"
+  :
+else
+  rm $LOCKFILE
+  log_error "cannot make backup copy of sequence_file"
+fi
+
+# todo: describe the purpose of follwing line
+find $BASE/data/ -name replicate-\*.osc -mtime +0 | xargs rm -f
+
+# fetch diff files from osm webpage
+#  $SEQFILE: the sequence file includes the start sequence number at startup (input value for pyosmium-get-changes )
+#            and the sequence number for next replication procedure (output value of pyosmium-get-changes )
+#  $THISFILE: this file includes the osm data fetched by the script
+log_info "bgn: pyosmium-get-changes sequence=$(cat $SEQFILE)"
+pyosmium-get-changes -s 500 -f $SEQFILE -o $THISFILE
+log_info "end: pyosmium-get-changes sequence=$(cat $SEQFILE)"
+
+# check if the osm diff file excists
+if [ ! -f $THISFILE ]
+then
+   # exit the script
+   rm $LOCKFILE
+   log_error "pyosmium-get-changes error"
+else
+  log_info "pyosmium-get-changes passed $THISFILE"
+fi
+
+# check if mergefile excists
+if [ -f $MERGEDFILE ]
+then
+   # something left over from last time
+   log_info "merging with existing diff"
+   if [ -f $BASE/data/osmium-mc.stderr ]; then
+     mv $BASE/data/osmium-mc.stderr $BASE/data/osmium-mc.stderr.old
+   fi
+   if osmium merge-changes --no-progress -s -o $MERGEDFILE-new.osc $THISFILE $MERGEDFILE 2>$BASE/data/osmium-mc.stderr
+   then
+      log_info "osmium passed"
+      mv $MERGEDFILE-new.osc $MERGEDFILE
+   else
+      rm $LOCKFILE
+      log_error "osmium failed"
+   fi
+else
+   log_info "skip merging with existing diff"
+   cp $THISFILE $MERGEDFILE
+fi
+
+if [ -f $BASE/data/osm2pgsql.stderr ]
+then
+  mv $BASE/data/osm2pgsql.stderr $BASE/data/osm2pgsql.stderr.old
+fi
+
+log_info "start osm2pgsql"
+
+if osm2pgsql \
+    -U "$PG_USER" \
+    -H "$PG_HOST" \
+    -d "$PG_DBNAME" \
+    --append \
+    --slim \
+    --hstore \
+    --number-processes=1 \
+    -C 16000 \
+    --style "$STYLE" \
+    --flat-nodes "$FLATNODEFILE" \
+    -e "$MINZOOM-$MAXZOOM" \
+    -o "$EXPIRELOG" \
+    --expire-bbox-size 20000 \
+    --tag-transform-script "$LUA" \
+    "$MERGEDFILE" 2>&1 | tee -a "$OSMPGSQL_LOGFILE"
+then
+   log_info "osm2pgsql passed"
+   rm $MERGEDFILE
+else
+   rm $LOCKFILE
+   log_error "error in osm2pgsql"
+fi
+
+local_sequence=$(cat $SEQFILE)
+LAG=$(expr $sequenceNumber - $local_sequence)
+log_info "end update: osmosis replication is ${LAG} minutes behind upstream"
+
+if [ -f $BASE/data/doexpire ]; then
+  sort -u $EXPIRELOG >$EXPIRELOG.uniq
+  mv $EXPIRELOG.uniq $EXPIRELOG
+  explog=$(expiremeta.pl --map=mapnikde --minzoom=$MINZOOM <$EXPIRELOG)
+  log_info "expire: $explog"
+  /usr/local/bin/expirehrb
+  mv $EXPIRELOG $EXPIRELOG.old
+  rm $BASE/data/doexpire
+fi
+
+# remove lockfile
+rm $LOCKFILE
+log_info "end replication $(date)"
+root@osmdbutils:/replication# ./scripts/replicate-loop.sh 
++ LANG=C
++ BASE=/replication/work
++ LOCKFILE=/replication/work/data/replicate.lock
++ FLATNODEFILE=/nodes/flat_nodes.bin
++ SEQFILE=/replication/work/data/sequence_file
++ STYLE=/replication/src/openstreetmap-carto/openstreetmap-carto.style
++ LUA=/replication/src/openstreetmap-carto/openstreetmap-carto.lua
++ MINZOOM=14
++ MAXZOOM=16
++ LOGFILE=/replication/work/replication.log
++ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/python3-pyosmium
++ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/python3-pyosmium
++ export PGPASSWORD=renderer
++ PGPASSWORD=renderer
++ PG_USER=renderer
++ PG_DBNAME=gis
++ PG_HOST=osmpsql
++ '[' -f /replication/work/data/sequence_file ']'
++ '[' -f /replication/work/data/replicate.lock ']'
+++ date
++ log_info 'bgn replication Wed Apr 29 09:38:59 UTC 2026'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:38:59
++ echo '[INFO ] 2026-04-29.09:38:59 bgn replication Wed Apr 29 09:38:59 UTC 2026'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:38:59 bgn replication Wed Apr 29 09:38:59 UTC 2026
++ echo 156372
+++ date +%s
++ START=1777455539
+++ curl -s https://planet.osm.org/replication/minute/state.txt
+++ grep sequenceNumber
++ eval
+++ cat /replication/work/data/sequence_file
++ local_sequence=7068096
+++ expr - 7068096
+expr: syntax error: unexpected argument '7068096'
++ LAG=
++ log_info 'start update: osmosis replication is  minutes behind upstream'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:38:59
++ echo '[INFO ] 2026-04-29.09:38:59 start update: osmosis replication is  minutes behind upstream'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:38:59 start update: osmosis replication is  minutes behind upstream
++ THISFILE=/replication/work/data/replicate-1777455539.osc
++ MERGEDFILE=/replication/work/data/merged.osc
++ EXPIRELOG=/replication/work/expire_7068096.log
++ OSMPGSQL_LOGFILE=/replication/work/data/osm2pgsql_7068096.stdout
++ cp /replication/work/data/sequence_file /replication/work/data/sequence_file.old
++ log_info 'make backup copy of sequence_file'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:38:59
++ echo '[INFO ] 2026-04-29.09:38:59 make backup copy of sequence_file'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:38:59 make backup copy of sequence_file
++ :
++ find /replication/work/data/ -name 'replicate-*.osc' -mtime +0
++ xargs rm -f
+++ cat /replication/work/data/sequence_file
++ log_info 'bgn: pyosmium-get-changes sequence=7068096'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:39:00
++ echo '[INFO ] 2026-04-29.09:39:00 bgn: pyosmium-get-changes sequence=7068096'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:39:00 bgn: pyosmium-get-changes sequence=7068096
++ pyosmium-get-changes -s 500 -f /replication/work/data/sequence_file -o /replication/work/data/replicate-1777455539.osc
+++ cat /replication/work/data/sequence_file
++ log_info 'end: pyosmium-get-changes sequence=7070101'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:43:06
++ echo '[INFO ] 2026-04-29.09:43:06 end: pyosmium-get-changes sequence=7070101'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:43:06 end: pyosmium-get-changes sequence=7070101
++ '[' '!' -f /replication/work/data/replicate-1777455539.osc ']'
++ log_info 'pyosmium-get-changes passed /replication/work/data/replicate-1777455539.osc'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:43:06
++ echo '[INFO ] 2026-04-29.09:43:06 pyosmium-get-changes passed /replication/work/data/replicate-1777455539.osc'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:43:06 pyosmium-get-changes passed /replication/work/data/replicate-1777455539.osc
++ '[' -f /replication/work/data/merged.osc ']'
++ log_info 'skip merging with existing diff'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:43:06
++ echo '[INFO ] 2026-04-29.09:43:06 skip merging with existing diff'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:43:06 skip merging with existing diff
++ cp /replication/work/data/replicate-1777455539.osc /replication/work/data/merged.osc
++ '[' -f /replication/work/data/osm2pgsql.stderr ']'
++ log_info 'start osm2pgsql'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.09:43:07
++ echo '[INFO ] 2026-04-29.09:43:07 start osm2pgsql'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.09:43:07 start osm2pgsql
++ osm2pgsql -U renderer -H osmpsql -d gis --append --slim --hstore --number-processes=1 -C 16000 --style /replication/src/openstreetmap-carto/openstreetmap-carto.style --flat-nodes /nodes/flat_nodes.bin -e 14-16 -o /replication/work/expire_7068096.log --expire-bbox-size 20000 --tag-transform-script /replication/src/openstreetmap-carto/openstreetmap-carto.lua /replication/work/data/merged.osc
++ tee -a /replication/work/data/osm2pgsql_7068096.stdout
+2026-04-29 09:43:07  osm2pgsql version 2.1.1
+2026-04-29 09:43:07  Database version: 18.3 (Debian 18.3-1.pgdg13+1)
+2026-04-29 09:43:07  PostGIS version: 3.6
+2026-04-29 09:43:07  Loading properties from table '"public"."osm2pgsql_properties"'.
+2026-04-29 09:43:07  Using flat node file '/nodes/flat_nodes.bin' (same as on import).
+2026-04-29 09:43:07  Using prefix 'planet_osm' (same as on import).
+2026-04-29 09:43:07  Using output 'pgsql' (same as on import).
+2026-04-29 09:43:07  Using style file '/replication/src/openstreetmap-carto/openstreetmap-carto.style' (same as on import).
+2026-04-29 09:43:07  Storing properties to table '"public"."osm2pgsql_properties"'.
+2026-04-29 09:43:07  WARNING: The pgsql (default) output is deprecated. For details see https://osm2pgsql.org/doc/faq.html#the-pgsql-output-is-deprecated-what-does-that-mean
+2026-04-29 09:43:07  Storing properties to table '"public"."osm2pgsql_properties"'.
+2026-04-29 09:43:07  Setting up table 'planet_osm_point'
+2026-04-29 09:43:07  Setting up table 'planet_osm_line'
+2026-04-29 09:43:07  Setting up table 'planet_osm_polygon'
+2026-04-29 09:43:07  Setting up table 'planet_osm_roads'
+2026-04-29 10:02:21  Reading input files done in 1154s (19m 14s).                         
+2026-04-29 10:02:21    Processed 3610916 nodes in 273s (4m 33s) - 13k/s
+2026-04-29 10:02:21    Processed 592008 ways in 240s (4m 0s) - 2k/s
+2026-04-29 10:02:21    Processed 15786 relations in 641s (10m 41s) - 25/s
+2026-04-29 10:02:21  Going over 95987 pending ways (using 1 threads)
+Left to process: 0.......
+2026-04-29 10:03:37  Processing 95987 pending ways took 76s (1m 16s) at a rate of 1262.99/s
+2026-04-29 10:03:37  Going over 43626 pending relations (using 1 threads)
+Left to process: 0.......
+2026-04-29 10:41:16  Processing 43626 pending relations took 2259s (37m 39s) at a rate of 19.31/s
+2026-04-29 10:41:23  Wrote 15373903 entries to expired tiles list
+2026-04-29 10:41:24  Done postprocessing on table 'planet_osm_nodes' in 0s
+2026-04-29 10:41:24  Done postprocessing on table 'planet_osm_ways' in 0s
+2026-04-29 10:41:24  Done postprocessing on table 'planet_osm_rels' in 0s
+2026-04-29 10:41:24  All postprocessing on table 'planet_osm_point' done in 0s.
+2026-04-29 10:41:24  All postprocessing on table 'planet_osm_line' done in 0s.
+2026-04-29 10:41:24  All postprocessing on table 'planet_osm_polygon' done in 0s.
+2026-04-29 10:41:24  All postprocessing on table 'planet_osm_roads' done in 0s.
+2026-04-29 10:41:24  Storing properties to table '"public"."osm2pgsql_properties"'.
+2026-04-29 10:41:24  osm2pgsql took 3497s (58m 17s) overall.
++ log_info 'osm2pgsql passed'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.10:41:24
++ echo '[INFO ] 2026-04-29.10:41:24 osm2pgsql passed'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.10:41:24 osm2pgsql passed
++ rm /replication/work/data/merged.osc
+++ cat /replication/work/data/sequence_file
++ local_sequence=7070101
+++ expr - 7070101
+expr: syntax error: unexpected argument '7070101'
++ LAG=
++ log_info 'end update: osmosis replication is  minutes behind upstream'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.10:41:24
++ echo '[INFO ] 2026-04-29.10:41:24 end update: osmosis replication is  minutes behind upstream'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.10:41:24 end update: osmosis replication is  minutes behind upstream
++ '[' -f /replication/work/data/doexpire ']'
++ rm /replication/work/data/replicate.lock
+++ date
++ log_info 'end replication Wed Apr 29 10:41:24 UTC 2026'
+++ date +%Y-%m-%d.%H:%M:%S
++ today=2026-04-29.10:41:24
++ echo '[INFO ] 2026-04-29.10:41:24 end replication Wed Apr 29 10:41:24 UTC 2026'
++ tee -a /replication/work/replication.log
+[INFO ] 2026-04-29.10:41:24 end replication Wed Apr 29 10:41:24 UTC 2026
